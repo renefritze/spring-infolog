@@ -1,0 +1,10 @@
+[site]
+port = 4001
+
+[db]
+alchemy-uri = sqlite:///infologs.db
+
+[cache]
+type= memory
+data_dir= tmp/cache/data
+lock_dir= tmp/cache/lock
