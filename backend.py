@@ -85,3 +85,14 @@ class Backend:
 		session.add( conf )
 		session.commit()
 		session.close()
+
+	def parseInfolog(self, filelikeobjectorsomesuch):
+		session = self.sessionmaker()
+		infolog = backend.InfoLog()
+		
+		#insert actual parsing here
+		#
+		
+		session.add( infolog )
+		session.commit()
+		session.close()
