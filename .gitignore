@@ -1,3 +1,6 @@
 buildbot
 wtforms
 tmp
+*.db
+*~
+*.pyc
