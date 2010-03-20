@@ -1,0 +1,37 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html>
+<head> 
+	<title>InfologStuff</title>
+	<link rel="stylesheet" href="/static/style.css" >
+	{% block head %}{% endblock %}
+</head>
+<body>
+	<div id='all'>
+		<div id="header">
+			<div class="logo">
+				
+			</div>
+		</div>
+
+		<div id="menu_top">
+			<ul>
+				<li class='first'><a class="nav" href="/">Home</a></li>
+<!-- 				<li><a class="nav" href="/ladder">Ladders</a></li> -->
+			</ul>
+		</div>
+
+		<div id="content">
+				{% block content %}{% endblock %}
+		</div>
+
+		<div id="footer">
+			<div class="left_footer">
+				{% block left_footer %}{% endblock %}
+			</div>
+			<div class="right_footer">
+				{% block right_footer %}{% endblock %}
+			</div>
+		</div>
+	</div>
+</body>
+</html>
