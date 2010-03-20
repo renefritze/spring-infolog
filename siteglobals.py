@@ -19,6 +19,6 @@ class SimpleConfig(ConfigParser):
 			s.add_section('site')
 			
 config = SimpleConfig()
-#db = backend.Db( config.get('', 'alchemy-uri') )
+db = backend.Backend( config.get('site', 'alchemy-uri') )
 env = Environment(loader=FileSystemLoader('templates'))
 cache = CacheManager(**parse_cache_config_options(cache_opts))
