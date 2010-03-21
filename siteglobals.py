@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from jinja2 import Environment, FileSystemLoader
-import backend
+from backend import Backend
 from ConfigParser import SafeConfigParser as ConfigParser
 from beaker.cache import CacheManager
 from beaker.util import parse_cache_config_options
@@ -13,7 +13,7 @@ class SimpleConfig(ConfigParser):
 			s.add_section('site')
 			
 config = SimpleConfig()
-db = backend.Backend( config.get('db', 'alchemy-uri') )
+db = Backend( config.get('db', 'alchemy-uri') )
 
 cache_opts = {
     'cache.type': 		config.get('cache','type'),

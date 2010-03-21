@@ -86,10 +86,11 @@ class Backend:
 		session.commit()
 		session.close()
 
-	def parseInfolog(self, filelikeobjectorsomesuch):
+	def parseInfolog(self, line_list):
 		session = self.sessionmaker()
-		infolog = backend.InfoLog()
-		
+		infolog = InfoLog()
+		for line in line_list:
+			print line
 		#insert actual parsing here
 		#
 		
