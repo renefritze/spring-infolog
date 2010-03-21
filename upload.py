@@ -4,7 +4,7 @@ import bottle
 from siteglobals import env, db,config
 from utils import *
 import hashlib,os
-
+from zipfile import ZipFile
 @route('/upload', method='GET')
 def output():
 	try:
@@ -21,7 +21,11 @@ def output_post():
 		fd = open( fn, 'wb')
 		fd.write( data )
 		fd.close()
-		#db.parseInfolog( fn )
+		members = dict()
+		zipfile = ZipFile( fn )
+		for name in ['infolog.txt','ext.txt','platform.txt','script.txt','settings.txt','unitsync.log']:
+			members[name] = zipfile.open( name )
+		db.parseZipMembers( members )
 		return 'success'
 
 	except Exception, m:

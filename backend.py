@@ -86,16 +86,16 @@ class Backend:
 		session.commit()
 		session.close()
 
-	def parseInfolog(self, line_list):
+	def parseZipMembers(self, fd_dict ):
 		session = self.sessionmaker()
-		infolog = InfoLog()
-		for line in line_list:
-			if line.startswith('Spring'):
-				infolog.spring_version = line.replace('Spring','')
-			print line
+		#infolog = InfoLog()
+		#for line in line_list:
+			#if line.startswith('Spring'):
+				#infolog.spring_version = line.replace('Spring','')
+			#print line
 		#insert actual parsing here
 		#
 		
-		session.add( infolog )
-		session.commit()
+		#session.add( infolog )
+		#session.commit()
 		session.close()
