@@ -1,5 +1,6 @@
 [site]
 port = 4001
+uploads = uploads
 
 [db]
 alchemy-uri = sqlite:///infologs.db
