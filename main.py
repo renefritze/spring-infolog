@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from bottle import route, run, debug, PasteServer, send_file, redirect, abort, request, default_app
-import os, index, upload
+import os, index, upload, infologlist
 from siteglobals import config
 
 @route('/images/:filename')
@@ -19,4 +19,4 @@ def favi():
 if __name__=="__main__":
 	port = config.getint('site','port')
 	app = default_app()
-	run(app=app,server=PasteServer,host='localhost',port=port , reloader=True)
+	run(app=app,server=PasteServer,host='localhost',port=port , reloader=False)

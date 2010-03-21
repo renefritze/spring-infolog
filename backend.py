@@ -8,7 +8,7 @@ Base = declarative_base()
 class InfoLog(Base):
 	__tablename__ 	= 'infologs'
 	id 				= Column( Integer, primary_key=True,index=True )
-	name 			= Column( String(100) )
+	spring_version	= Column( String(100) )
 	description 	= Column( Text )
 	#and so forth
 
@@ -90,6 +90,8 @@ class Backend:
 		session = self.sessionmaker()
 		infolog = InfoLog()
 		for line in line_list:
+			if line.startswith('Spring'):
+				infolog.spring_version = line.replace('Spring','')
 			print line
 		#insert actual parsing here
 		#

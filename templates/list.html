@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+<ul>
+	{% for log in infologs %}
+		<li>{{log.spring_version}}</li>
+	{% endfor %}
+<ul>
+{% endblock %}
+
