@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from bottle import route,request,redirect
 import bottle
-from siteglobals import env, db,config
+from siteglobals import env, db,config,tasbot
 from utils import *
 import hashlib,os
 from zipfile import ZipFile
@@ -16,6 +16,8 @@ def output():
 @route('/upload', method='POST')
 def output_post():
 	try:
+		tasbot.tasclient.say('ladder','test')
+		tasbot.tasclient.leave('ladder')
 		data = request.POST['file'].value
 		fn = '%s/%s/%s.zip'%( os.getcwd(), config.get('site','uploads'),hashlib.sha224(data).hexdigest() )
 		fd = open( fn, 'wb')

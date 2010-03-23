@@ -4,6 +4,7 @@ from backend import Backend
 from ConfigParser import SafeConfigParser as ConfigParser
 from beaker.cache import CacheManager
 from beaker.util import parse_cache_config_options
+import tasbot
 
 class SimpleConfig(ConfigParser):
 	def __init__(s,fn='site.cfg'):
@@ -23,3 +24,5 @@ cache_opts = {
 
 env = Environment(loader=FileSystemLoader('templates'))
 cache = CacheManager(**parse_cache_config_options(cache_opts))
+tasbot = tasbot.bot()
+tasbot.run("Main.conf",False,True)
