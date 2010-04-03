@@ -11,7 +11,12 @@ def image_file(filename):
 @route('/static/:filename')
 def static_file(filename):
 	return send_file( filename, root=os.getcwd()+'/static/' )
-	
+
+uploads = '/%s/' % config.get('site','uploads')
+@route(uploads + ':filename')
+def log_file(filename):
+	return send_file( filename, root=os.getcwd()+ uploads )
+
 @route('/favicon.ico')
 def favi():
 	return send_file( 'favicon.ico', root=os.getcwd()+'/images/' )
@@ -19,4 +24,6 @@ def favi():
 if __name__=="__main__":
 	port = config.getint('site','port')
 	app = default_app()
-	run(app=app,server=PasteServer,host='localhost',port=port , reloader=False)
+	print uploads
+	run(app=app,server=PasteServer,host='localhost',port=port , reloader=True)
+	

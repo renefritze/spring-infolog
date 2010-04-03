@@ -19,15 +19,19 @@ def output_post():
 		tasbot.tasclient.say('ladder','test')
 		tasbot.tasclient.leave('ladder')
 		data = request.POST['file'].value
-		fn = '%s/%s/%s.zip'%( os.getcwd(), config.get('site','uploads'),hashlib.sha224(data).hexdigest() )
+		upload_dir = config.get('site','uploads')
+		fn = '%s/%s/%s.zip'%( os.getcwd(), upload_dir,hashlib.sha224(data).hexdigest() )
 		fd = open( fn, 'wb')
 		fd.write( data )
 		fd.close()
 		members = dict()
 		zipfile = ZipFile( fn )
-		for name in ['infolog.txt','ext.txt','platform.txt','script.txt','settings.txt','unitsync.log']:
-			members[name] = zipfile.open( name )
-		db.parseZipMembers( members )
+
+		files_of_interest = ['infolog.txt','ext.txt','platform.txt','script.txt','settings.txt','unitsync.log']
+		for info in zipfile.infolist():
+			if info.filename in files_of_interest and info.file_size < 20e5:
+				members[info.filename] = zipfile.read( info.filename )
+		db.parseZipMembers( fn, members )
 		return 'success'
 
 	except Exception, m:

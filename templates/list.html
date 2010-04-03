@@ -3,7 +3,7 @@
 {% block content %}
 <ul>
 	{% for log in infologs %}
-		<li>{{log.spring_version}}</li>
+		<li><a href="{{ upload_dir }}/{{ log.basename() }}">{{ log.date }}</li>
 	{% endfor %}
 <ul>
 {% endblock %}
