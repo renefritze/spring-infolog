@@ -2,6 +2,7 @@
 from sqlalchemy import *
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import *
+import datetime
 
 Base = declarative_base()
 
@@ -10,6 +11,8 @@ class InfoLog(Base):
 	id 				= Column( Integer, primary_key=True,index=True )
 	spring_version	= Column( String(100) )
 	description 	= Column( Text )
+	date 			= Column( DateTime )
+	filename		= Column( String(255) )
 	#and so forth
 
 class DbConfig(Base):
@@ -86,9 +89,11 @@ class Backend:
 		session.commit()
 		session.close()
 
-	def parseZipMembers(self, fd_dict ):
+	def parseZipMembers(self, fn, fd_dict ):
 		session = self.sessionmaker()
-		#infolog = InfoLog()
+		infolog = InfoLog()
+		infolog.date = datetime.datetime.now()
+		infolog.filename = fn
 		#for line in line_list:
 			#if line.startswith('Spring'):
 				#infolog.spring_version = line.replace('Spring','')
@@ -96,6 +101,6 @@ class Backend:
 		#insert actual parsing here
 		#
 		
-		#session.add( infolog )
-		#session.commit()
+		session.add( infolog )
+		session.commit()
 		session.close()

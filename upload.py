@@ -23,9 +23,12 @@ def output_post():
 		fd.close()
 		members = dict()
 		zipfile = ZipFile( fn )
-		for name in ['infolog.txt','ext.txt','platform.txt','script.txt','settings.txt','unitsync.log']:
-			members[name] = zipfile.open( name )
-		db.parseZipMembers( members )
+
+		files_of_interest = ['infolog.txt','ext.txt','platform.txt','script.txt','settings.txt','unitsync.log']:
+		for info in zipfile.infolist():
+			if info.filename in files_of_interest and info.file_size < 20e5:
+				members[info.filename] = zipfile.read( info.filename )
+		db.parseZipMembers( fn, members )
 		return 'success'
 
 	except Exception, m:
