@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from bottle import route, run, debug, PasteServer, send_file, redirect, abort, request, default_app
-import os, index, upload, infologlist, details
+import os, index, upload, recordlist, details
 from siteglobals import config
 
 @route('/images/:filename')
