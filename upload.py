@@ -29,7 +29,7 @@ def output_post():
 		for info in zipfile.infolist():
 			if info.filename in files_of_interest and info.file_size < 20e5:
 				members[info.filename] = zipfile.read( info.filename )
-		db.parseZipMembers( fn, members )
+		new_id = db.parseZipMembers( fn, members )
 		return 'success'
 
 	except Exception, m:

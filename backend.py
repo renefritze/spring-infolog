@@ -4,19 +4,28 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import *
 import datetime, os
 
+current_db_rev = 4
 Base = declarative_base()
+
+class Record(Base):
+	__tablename__ 	= 'records'
+	id 				= Column( Integer, primary_key=True,index=True )
+	date 			= Column( DateTime )
+	description 	= Column( Text )
+	filename		= Column( String(255) )
+
+	def __init__(self):
+		self.date = datetime.datetime.now()
+		
+	def basename(self):
+		return os.path.basename( self.filename )
 
 class InfoLog(Base):
 	__tablename__ 	= 'infologs'
 	id 				= Column( Integer, primary_key=True,index=True )
 	spring_version	= Column( String(100) )
-	description 	= Column( Text )
-	date 			= Column( DateTime )
-	filename		= Column( String(255) )
+	record_id 		= Column( Integer, ForeignKey( Record.id ) )
 	#and so forth
-
-	def basename(self):
-		return os.path.basename( self.filename )
 
 class DbConfig(Base):
 	__tablename__	= 'config'
@@ -24,9 +33,6 @@ class DbConfig(Base):
 
 	def __init__(self):
 		self.dbrevision = 1
-
-
-current_db_rev = 4
 
 class ElementExistsException( Exception ):
 	def __init__(self, element):
@@ -94,9 +100,14 @@ class Backend:
 
 	def parseZipMembers(self, fn, fd_dict ):
 		session = self.sessionmaker()
+		record = Record()
+		record.filename = fn
+		session.add( record )
+		session.commit()
+		record_id = record.id
+
 		infolog = InfoLog()
-		infolog.date = datetime.datetime.now()
-		infolog.filename = fn
+		infolog.record_id = record_id
 		#for line in line_list:
 			#if line.startswith('Spring'):
 				#infolog.spring_version = line.replace('Spring','')
@@ -104,6 +115,8 @@ class Backend:
 		#insert actual parsing here
 		#
 		
-		session.add( infolog )
+		session.add( infolog )		
 		session.commit()
 		session.close()
+		print 'koko'
+		return record_id

@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1> Stuff from {{ record.date }} </h1>
+Description: {{ record.description }}
+<br>
+<a href="{{ upload_dir }}/{{ record.basename() }}">Download
+
+{% endblock %}
+
