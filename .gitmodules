@@ -1,0 +1,3 @@
+[submodule "tasbot"]
+	path = tasbot
+	url = git://github.com/BrainDamage/tasbot.git
