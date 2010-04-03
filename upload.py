@@ -17,14 +17,15 @@ def output():
 def output_post():
 	try:
 		data = request.POST['file'].value
-		fn = '%s/%s/%s.zip'%( os.getcwd(), config.get('site','uploads'),hashlib.sha224(data).hexdigest() )
+		upload_dir = config.get('site','uploads')
+		fn = '%s/%s/%s.zip'%( os.getcwd(), upload_dir,hashlib.sha224(data).hexdigest() )
 		fd = open( fn, 'wb')
 		fd.write( data )
 		fd.close()
 		members = dict()
 		zipfile = ZipFile( fn )
 
-		files_of_interest = ['infolog.txt','ext.txt','platform.txt','script.txt','settings.txt','unitsync.log']:
+		files_of_interest = ['infolog.txt','ext.txt','platform.txt','script.txt','settings.txt','unitsync.log']
 		for info in zipfile.infolist():
 			if info.filename in files_of_interest and info.file_size < 20e5:
 				members[info.filename] = zipfile.read( info.filename )

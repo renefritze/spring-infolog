@@ -2,7 +2,7 @@
 from sqlalchemy import *
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import *
-import datetime
+import datetime, os
 
 Base = declarative_base()
 
@@ -14,6 +14,9 @@ class InfoLog(Base):
 	date 			= Column( DateTime )
 	filename		= Column( String(255) )
 	#and so forth
+
+	def basename(self):
+		return os.path.basename( self.filename )
 
 class DbConfig(Base):
 	__tablename__	= 'config'
