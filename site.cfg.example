@@ -1,6 +1,7 @@
 [site]
 port = 4001
 uploads = uploads
+baseurl = debug.example.com
 
 [db]
 alchemy-uri = sqlite:///infologs.db
@@ -9,3 +10,13 @@ alchemy-uri = sqlite:///infologs.db
 type= memory
 data_dir= tmp/cache/data
 lock_dir= tmp/cache/lock
+
+[tasbot]
+serveraddr=springrts.com
+serverport=8200
+admins=YOUR_LOBBY_NICK
+plugins=channels
+password=PASSWORD_FOR_BOT_NOT_YOUR_PASSWORD
+nick=BOT_NICK
+channelautojoinlist=SOME_CHANNEL
+report_channel=CHANNEL_WHERE_UPLOAD_MSGS_AND_SUCH_WILL_BE_POSTED

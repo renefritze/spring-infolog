@@ -16,8 +16,6 @@ def output():
 @route('/upload', method='POST')
 def output_post():
 	try:
-		tasbot.tasclient.say('ladder','test')
-		tasbot.tasclient.leave('ladder')
 		data = request.POST['file'].value
 		upload_dir = config.get('site','uploads')
 		fn = '%s/%s/%s.zip'%( os.getcwd(), upload_dir,hashlib.sha224(data).hexdigest() )
@@ -32,6 +30,9 @@ def output_post():
 			if info.filename in files_of_interest and info.file_size < 20e5:
 				members[info.filename] = zipfile.read( info.filename )
 		new_id = db.parseZipMembers( fn, members )
+		base_url = config.get('site', 'baseurl' )
+		chan = config.get('tasbot', 'report_channel' )
+		tasbot.tasclient.say(chan,'new crash report uploaded: http://%s/details?id=%d'%(base_url,new_id))
 		return 'success'
 
 	except Exception, m:

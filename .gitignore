@@ -1,3 +1,4 @@
+*.log
 uploads
 site.cfg
 buildbot
@@ -6,3 +7,4 @@ tmp
 *.db
 *~
 *.pyc
+.tasbot.cfg
