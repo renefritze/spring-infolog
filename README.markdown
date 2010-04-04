@@ -6,6 +6,7 @@
 	* bottle (included)
 
 # Usage
+	* after cloning run: git submodule update --init
 	* copy site.cfg.example to site.cfg and edit as necessary
 	* run ./main.py
 	* goto http://localhost:PORT (default PORT=4001)
