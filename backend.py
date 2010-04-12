@@ -4,14 +4,14 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import *
 import datetime, os
 
-current_db_rev = 4
+current_db_rev = 5
 Base = declarative_base()
 
-class Record(Base):
+class Crash(Base):
 	__tablename__ 	= 'records'
 	id 				= Column( Integer, primary_key=True,index=True )
 	date 			= Column( DateTime )
-	description 	= Column( Text )
+	extensions		= Column( PickleType )
 	filename		= Column( String(255) )
 
 	def __init__(self):
@@ -19,13 +19,6 @@ class Record(Base):
 		
 	def basename(self):
 		return os.path.basename( self.filename )
-
-class InfoLog(Base):
-	__tablename__ 	= 'infologs'
-	id 				= Column( Integer, primary_key=True,index=True )
-	spring_version	= Column( String(100) )
-	record_id 		= Column( Integer, ForeignKey( Record.id ) )
-	#and so forth
 
 class DbConfig(Base):
 	__tablename__	= 'config'
@@ -98,24 +91,20 @@ class Backend:
 		session.commit()
 		session.close()
 
-	def parseZipMembers(self, fn, fd_dict ):
+	def parseZipMembers(self, fn, data ):
 		session = self.sessionmaker()
-		record = Record()
-		record.filename = fn
-		session.add( record )
+		crash = Crash()
+		crash.filename = fn
+		session.add( crash )
 		session.commit()
-		record_id = record.id
+		crash_id = crash.id
 
-		infolog = InfoLog()
-		infolog.record_id = record_id
-		#for line in line_list:
-			#if line.startswith('Spring'):
-				#infolog.spring_version = line.replace('Spring','')
-			#print line
+		if data.has_key( 'ext.txt' ):
+			crash.extensions = data['ext.txt'].split()
+
 		#insert actual parsing here
-		#
 		
-		session.add( infolog )		
+		session.add( crash )
 		session.commit()
 		session.close()
-		return record_id
+		return crash_id

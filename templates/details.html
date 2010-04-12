@@ -1,10 +1,12 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1> Stuff from {{ record.date }} </h1>
-Description: {{ record.description }}
+<h1> Stuff from {{ crash.date }} </h1>
+Description: {{ crash.description }}
 <br>
-<a href="{{ upload_dir }}/{{ record.basename() }}">Download
+{{ ' '.join( crash.extensions ) }}
+<br>
+<a href="{{ upload_dir }}/{{ crash.basename() }}">Download
 
 {% endblock %}
 

@@ -2,8 +2,8 @@
 
 {% block content %}
 <ul>
-	{% for record in records %}
-		<li><a href="details?id={{ record.id }}">{{ record.date }}</li>
+	{% for crash in crashs %}
+		<li><a href="details?id={{ crash.id }}">{{ crash.date }}</li>
 	{% endfor %}
 <ul>
 {% endblock %}
