@@ -10,9 +10,9 @@ body
 
 #all {
 	background:#fff;
-	margin-left:200px;
-	margin-right:200px;
-	width:800px;
+	margin-left:5%;
+	margin-right:5%;
+	width:90%;
 }
 
 a{
@@ -22,12 +22,6 @@ a{
 
 table {
 	border-collapse: collapse;
-}
-
-h1{
-}
-
-p{
 }
 
 #header{
@@ -52,10 +46,6 @@ p{
 	clear:both;
 	padding: 10px;
 	text-align: center;
-	/*height:28px;*/
-	/*border-left: 2px dashed #000;
-	border-right: 2px dashed #000;*/
-/*	border-bottom: 1px dashed #555;*/
 }
 
 #menu_top ul {
@@ -81,21 +71,6 @@ p{
 }
 
 
-a.nav:link, a.nav:visited {
-	/*display:block; float:left; padding:0px;width:122px; height:28px; margin:0px 5px 0px 5px; text-align:center;
-	text-decoration:none; background:url(images/bt.gif); color:#313537;*/
-}
-
-a.nav_selected:link, a.nav_selected:visited {
-	/*display:block; float:left; padding:0px;width:122px; height:28px;margin:0px 5px 0px 5px;text-align:center;
-	text-decoration:none; background:url(images/bt_a.gif);color: #313537;*/
-}
-
-a.nav:hover {
-/* 	color: #313537; text-decoration:none; background:url(images/bt_a.gif); */
-}
-
-
 /*----------------content----------------*/
 #content{
 	clear:both;
@@ -118,155 +93,8 @@ a.nav:hover {
 	font-weight: bold;
 }
 
-#index_block_left {
-	margin-left: -100%;
-	width: 33%;
-	float: left;
-}
-
-#index_block_center {
-	padding: 10px;
-	margin: 0 33% 0 33%;
-	border-left: 2px dashed #000;
-	border-right: 2px dashed #000;	
-}
-
-#index_block_right {
-	margin-left: -33%;
-	width: 33%;
-	float: left;
-}
-
-#index_block_center_wrapper {
-	width: 100%;
-	float: left;
-	margin-top: -10px;
-}
-
-#index_block_content {
-	padding-left: 0px;
-	padding-right: 0px;
-	text-align: center;
-	font-size: 80%;
-}
-
-#index_block_content ul li {
- 	margin-left: -40px;
-	padding: 2px 2px;
-	list-style: none;
-	list-style-position:inside;
-}
-#index_block_content h1 {
-	margin-bottom: 0;
-}
-.command {
-	background-color: #eee;
-	color: #f00;
-	font-family: monospace;
-}
-
-.unevengridcell {
-	background-color:#ebebeb;
-}
-
-#help ul li{
-	list-style-position: outside;
-	padding: 0px;
-}
-#help p {
-	margin-bottom:0.2em;
-}
-
-#ladderlist td {
-	width: 33%;
-	vertical-align: top;
-	padding-left:2%;
-	padding-right:2%;
-	padding-bottom:2%;
-}
-#ladderview td{
-	vertical-align: top;
-	padding-left:2%;
-	padding-right:2%;
-	padding-bottom:2%;
-}
-
-#ladderlist h4 {
-	margin-bottom:0.3em;
-}
-
-#ladderlist h3 {
-	font-weight: bold;
-	font-size: 1.5em;
-}
-
-#matchgrid h3 {
-	font-weight: bold;
-	font-size: 1.5em;
-	margin-bottom:0.1em;
-}
-
-#ladderlist ol {
-	margin-bottom:0.1em;
-	margin-top:0.1em;
-	padding-top:0px;
-}
-
-#ladderlist table {
-	width: 100%;
-	margin-top: 0px;
-}
-
-#matchgrid td {
-	width: 33%;
-	vertical-align: top;
-	padding-left:2%;
-	padding-right:2%;
-	padding-bottom:2%;
-}
-
-#matchgrid h5 {
-	text-align: center;
-}
-#matchgrid table {
-	width: 100%;
-	margin-top: 0px;
-}
-
 .padded td{
-	padding: 0.3em;	
-}
-
-#results table {
-	width:60%;
-}
-#wideresults table {
-	width:90%;
-}
-#wideresults th {
-	text-align:left;
-}
-#results td {
 	padding: 0.3em;
-	margin: 1.2em;
-}
-
-#results th {
-	font-weight: bold;
-	text-align: left;
-}
-
-.topborder {
-	border-top: 1px dashed #444;
-}
-
-.bottomborder {
-	border-bottom: 1px dashed #444;
-}
-
-#match tr {
-	border-left: 1px dashed #444;
-	border-right: 1px dashed #444; 
 }
 
 #inlinelist ul {
@@ -298,6 +126,8 @@ a.nav:hover {
 	color: #f00;
 	font-family: monospace;
 }
+
+.grid td a { text-decoration:underline;color:#333}
 
 /*---------------------pagination-----------------------------*/
 
