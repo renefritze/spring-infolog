@@ -1,10 +1,6 @@
 {% extends "base.html" %}
 
 {% block content %}
-<ul>
-	{% for crash in crashs %}
-		<li><a href="details?id={{ crash.id }}">{{ crash.date }}</li>
-	{% endfor %}
-<ul>
+	{{ widget(value=value) }}
 {% endblock %}
 

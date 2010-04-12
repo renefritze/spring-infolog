@@ -2,6 +2,7 @@
 port = 4001
 uploads = uploads
 baseurl = debug.example.com
+debug=False
 
 [db]
 alchemy-uri = sqlite:///infologs.db

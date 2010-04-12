@@ -5,6 +5,8 @@
 	* sqlite/mysql for db backend
 	* Jinja2
 	* bottle (included)
+	* sprox,toscawidgets
+	
 
 # Usage
 	* after cloning run: git submodule update --init

@@ -3,6 +3,7 @@
 from bottle import route, run, debug, PasteServer, send_file, redirect, abort, request, default_app
 import os, index, upload, recordlist, details
 from siteglobals import config
+from tw.api import make_middleware
 
 @route('/images/:filename')
 def image_file(filename):
@@ -23,6 +24,11 @@ def favi():
 
 if __name__=="__main__":
 	port = config.getint('site','port')
+	is_debug = config.getboolean('site','debug')
 	app = default_app()
-	run(app=app,server=PasteServer,host='localhost',port=port , reloader=True)
-	
+	application = make_middleware(app, {
+		'toscawidgets.framework.default_view': 'jinja2',
+		'toscawidgets.middleware.inject_resources': True,
+		}, stack_registry=True)
+	debug(is_debug)
+	run(app=application,server=PasteServer,host='localhost',port=port , reloader=is_debug)	
