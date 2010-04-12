@@ -118,5 +118,4 @@ class Backend:
 		session.add( infolog )		
 		session.commit()
 		session.close()
-		print 'koko'
 		return record_id
