@@ -17,6 +17,8 @@ class Crash(Base):
 	filename		= Column( String(255) )
 	platform		= Column( String(100) )
 
+	important_settings = ['Shadows']
+	
 	def __init__(self):
 		self.date = datetime.datetime.now()
 		
@@ -112,8 +114,8 @@ class Backend:
 		if data.has_key( 'script.txt' ):
 			crash.script = data['script.txt'].splitlines()
 		if data.has_key( 'settings.txt' ):
-			crash.settings = zip( map( lambda line: line.split('=')[0], data['settings.txt'].splitlines() ), \
-								map( lambda line: line.split('=')[1], data['settings.txt'].splitlines() ) )
+			crash.settings = dict( zip( map( lambda line: line.split('=')[0], data['settings.txt'].splitlines() ), \
+								map( lambda line: line.split('=')[1], data['settings.txt'].splitlines() ) ) )
 		if data.has_key( 'platform.txt' ):
 			crash.platform = data['platform.txt'].strip()
 		crash.status = None

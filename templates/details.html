@@ -7,12 +7,13 @@
 	<li>Platform: {{ crash.platform }}</li>
 </ul>
 <a href="{{ upload_dir }}/{{ crash.basename() }}">Download
-<p>
+<h2>extensions</h2>
 	{{ ' '.join( crash.extensions ) }}
-</p>
-<p>
+
+<h2>important settings</h2>
+{{ settings }}
+<h2 >all settings</h2>
 {{ crash.settings }}
-</p>
 
 {% endblock %}
 
