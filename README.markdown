@@ -3,6 +3,7 @@
 	* PasteServer
 	* SqlAlchemy >=0.5
 	* sqlite/mysql for db backend
+	* Jinja2
 	* bottle (included)
 
 # Usage
