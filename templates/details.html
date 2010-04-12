@@ -3,10 +3,13 @@
 {% block content %}
 <h1> Stuff from {{ crash.date }} </h1>
 Description: {{ crash.description }}
-<br>
-{{ ' '.join( crash.extensions ) }}
-<br>
 <a href="{{ upload_dir }}/{{ crash.basename() }}">Download
+<p>
+	{{ ' '.join( crash.extensions ) }}
+</p>
+<p>
+{{ crash.settings }}
+</p>
 
 {% endblock %}
 

@@ -12,6 +12,8 @@ class Crash(Base):
 	id 				= Column( Integer, primary_key=True,index=True )
 	date 			= Column( DateTime )
 	extensions		= Column( PickleType )
+	settings		= Column( PickleType )
+	script			= Column( PickleType )
 	filename		= Column( String(255) )
 
 	def __init__(self):
@@ -100,8 +102,13 @@ class Backend:
 		crash_id = crash.id
 
 		if data.has_key( 'ext.txt' ):
-			crash.extensions = data['ext.txt'].split()
-
+			crash.extensions = data['ext.txt'].splitlines()
+		if data.has_key( 'script.txt' ):
+			crash.script = data['script.txt'].splitlines()
+		if data.has_key( 'settings.txt' ):
+			crash.settings = zip( map( lambda line: line.split('=')[0], data['settings.txt'].splitlines() ), \
+								map( lambda line: line.split('=')[1], data['settings.txt'].splitlines() ) )
+				
 		#insert actual parsing here
 		
 		session.add( crash )
