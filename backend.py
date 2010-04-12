@@ -15,12 +15,18 @@ class Crash(Base):
 	settings		= Column( PickleType )
 	script			= Column( PickleType )
 	filename		= Column( String(255) )
+	platform		= Column( String(100) )
 
 	def __init__(self):
 		self.date = datetime.datetime.now()
 		
 	def basename(self):
 		return os.path.basename( self.filename )
+
+class Status(Base):
+	__tablename__	= 'status'
+	internal_name	= Column( String(20), primary_key=True,index=True )
+	display_name	= Column( String(60) )
 
 class DbConfig(Base):
 	__tablename__	= 'config'
@@ -108,7 +114,9 @@ class Backend:
 		if data.has_key( 'settings.txt' ):
 			crash.settings = zip( map( lambda line: line.split('=')[0], data['settings.txt'].splitlines() ), \
 								map( lambda line: line.split('=')[1], data['settings.txt'].splitlines() ) )
-				
+		if data.has_key( 'platform.txt' ):
+			crash.platform = data['platform.txt'].strip()
+		crash.status = None
 		#insert actual parsing here
 		
 		session.add( crash )
