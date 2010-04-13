@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from bottle import route,request
-from siteglobals import env, db, config
+from siteglobals import env, db, config, cache
 from utils import *
 from backend import Crash
 from sprox.tablebase import TableBase
@@ -17,6 +17,7 @@ class CrashTable( TableBase ):
 	__omit_fields__ = ['id', 'extensions', '__actions__','settings','filename','script']
 	__xml_fields__=['date']
 
+@cache.cache('list_output', expire=60)
 @route('/list', method='GET')
 def output():
 	try:

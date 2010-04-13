@@ -2,10 +2,11 @@
 # -*- coding: utf-8 -*-
 from bottle import route,request,redirect
 import bottle
-from siteglobals import env, db,config,tasbot
+from siteglobals import env, db,config,tasbot,cache
 from utils import *
 import hashlib,os,sys
 from zipfile import ZipFile
+import recordlist
 @route('/upload', method='GET')
 def output():
 	try:
@@ -17,7 +18,7 @@ def output():
 def parseZip( fn ):
 	members = dict()
 	zipfile = ZipFile( fn )
-
+	cache.invalidate(recordlist.output, 'list_output', )
 	files_of_interest = ['infolog.txt','ext.txt','platform.txt','script.txt','settings.txt','unitsync.log']
 	for info in zipfile.infolist():
 		if info.filename in files_of_interest and info.file_size < 20e5:
