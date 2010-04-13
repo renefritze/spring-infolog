@@ -146,9 +146,10 @@ class Backend:
 			value = self.parseInfologSub ('^[\[ 0\]]*Using map[ ]*', line)
 			if (value):
 				crash.map = value
-			value = self.parseInfologSub ('^[\[ 0\]]*Using mod[ ]*', line)
-			if (value):
-				crash.mod = value
+			if (not crash.mod):
+				value = self.parseInfologSub ('^[\[ 0\]]*Using mod[ ]*', line)
+				if (value):
+					crash.mod = value
 			value = self.parseInfologSub ('^[\[ 0\]]*GameID:[ ]*', line)
 			if (value):
 				self.gameid = value
@@ -183,10 +184,12 @@ class Backend:
 			if (value):
 				if (not crash.gl_version):
 					crash.gl_version = value
-				if (not crash.gl_vendor):
-					crash.gl_vendor = value
-				if (not crash.gl_renderer):
-					crash.gl_renderer = value
+				else:
+					if (not crash.gl_vendor):
+						crash.gl_vendor = value
+					else:
+						if (not crash.gl_renderer):
+							crash.gl_renderer = value
 			
 		if (al_available_devices):
 			crash.al_available_devices = "\n".join (al_available_devices)
