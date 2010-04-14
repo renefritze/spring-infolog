@@ -120,14 +120,17 @@ class Backend:
 		session.commit()
 		session.close()
 
-	def parseZipMembers(self, fn, data ):
+	def parseZipMembers(self, fn, data, date_time = '' ):
 		session = self.sessionmaker()
 		crash = Crash()
 		crash.filename = fn
 		session.add( crash )
 		session.commit()
 		crash_id = crash.id
-
+		
+		if (date_time):
+			crash.date = datetime.datetime (date_time[0], date_time[1], date_time[2], date_time[3], date_time[4], date_time[5])
+		
 		if data.has_key( 'ext.txt' ):
 			crash.extensions = data['ext.txt'].splitlines()
 		if data.has_key( 'script.txt' ):
