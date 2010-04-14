@@ -24,6 +24,7 @@ def favi():
 
 if __name__=="__main__":
 	port = config.getint('site','port')
+	host = config.get('site','host')
 	is_debug = config.getboolean('site','debug')
 	app = default_app()
 	application = make_middleware(app, {
@@ -31,4 +32,4 @@ if __name__=="__main__":
 		'toscawidgets.middleware.inject_resources': True,
 		}, stack_registry=True)
 	debug(is_debug)
-	run(app=application,server=PasteServer,host='localhost',port=port , reloader=is_debug)	
+	run(app=application,server=PasteServer,host=host,port=port , reloader=is_debug)	

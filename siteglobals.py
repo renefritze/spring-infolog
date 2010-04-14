@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import with_statement
 from jinja2 import Environment, FileSystemLoader
 from backend import Backend
 from ConfigParser import SafeConfigParser as ConfigParser

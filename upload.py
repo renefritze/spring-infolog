@@ -16,6 +16,7 @@ def output():
 		return env.get_template('error.html').render(err_msg=str(m))
 
 def parseZip( fn ):
+	date_time = ''
 	members = dict()
 	zipfile = ZipFile( fn )
 	cache.invalidate(recordlist.output, 'list_output', )
@@ -23,7 +24,9 @@ def parseZip( fn ):
 	for info in zipfile.infolist():
 		if info.filename in files_of_interest and info.file_size < 20e5:
 			members[info.filename] = zipfile.read( info.filename )
-	return db.parseZipMembers( fn, members )
+			if info.filename == 'infolog.txt':
+				date_time = info.date_time
+	return db.parseZipMembers( fn, members, date_time )
 
 @route('/upload', method='POST')
 def output_post():
