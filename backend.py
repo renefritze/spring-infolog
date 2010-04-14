@@ -33,6 +33,7 @@ class Crash(Base):
 	gl_version				= Column( String(100) )
 	gl_vendor				= Column( String(100) )
 	gl_renderer				= Column( String(100) )
+	crashed					= Column( Boolean, default=False )
 	
 
 	important_settings = ['Shadows']
@@ -140,57 +141,60 @@ class Backend:
 		
 		al_available_devices = []
 		for line in data['infolog.txt'].splitlines ():
-			match = re.search ('^Spring*(/d*.)*', line)
-			if (match):
-				crash.spring = line
-			value = self.parseInfologSub ('^[\[ 0\]]*Using map[ ]*', line)
-			if (value):
-				crash.map = value
-			if (not crash.mod):
-				value = self.parseInfologSub ('^[\[ 0\]]*Using mod[ ]*', line)
+			if (re.search ('^\[[ 0]*\]', line)):
+				value = self.parseInfologSub ('^\[[ 0]*\] Using map[ ]*', line)
 				if (value):
-					crash.mod = value
-			value = self.parseInfologSub ('^[\[ 0\]]*GameID:[ ]*', line)
-			if (value):
-				self.gameid = value
-			value = self.parseInfologSub ('^[\[ 0\]]*SDL:[ ]*', line)
-			if (value):
-				crash.sdl_version = value
-			value = self.parseInfologSub ('^[\[ 0\]]*GLEW:[ ]*', line)
-			if (value):
-				crash.glew_version = value
-			value = self.parseInfologSub ('^[\[ 0-9\]]*Sound:[ ]*Vendor:[ ]*', line)
-			if (value):
-				crash.al_vendor = value
-			value = self.parseInfologSub ('^[\[ 0-9\]]*Sound:[ ]*Version:[ ]*', line)
-			if (value):
-				crash.al_version = value
-			value = self.parseInfologSub ('^[\[ 0-9\]]*Sound:[ ]*Renderer:[ ]*', line)
-			if (value):
-				crash.al_renderer = value
-			value = self.parseInfologSub ('^[\[ 0-9\]]*Sound:[ ]*AL Extensions:[ ]*', line)
-			if (value):
-				crash.al_extensions = value
-			value = self.parseInfologSub ('^[\[ 0-9\]]*Sound:[ ]*ALC Extensions:[ ]*', line)
-			if (value):
-				crash.alc_extensions = value
-			value = self.parseInfologSub ('^[\[ 0-9\]]*Sound:[ ]*Device:[ ]*', line)
-			if (value):
-				crash.al_device = value
-			value = self.parseInfologSub ('^[\[ 0-9\]]*Sound:[ ]{23}', line)
-			if (value):
-				al_available_devices.append (value)
-			value = self.parseInfologSub ('^[\[ 0-9\]]*GL:[ ]*', line)
-			if (value):
-				if (not crash.gl_version):
-					crash.gl_version = value
-				else:
-					if (not crash.gl_vendor):
+					crash.map = value
+				if (not crash.mod):
+					value = self.parseInfologSub ('^\[[ 0]*\] Using mod[ ]*', line)
+					if (value):
+						crash.mod = value
+				value = self.parseInfologSub ('^\[[ 0]*\] GameID:[ ]*', line)
+				if (value):
+					self.gameid = value
+				value = self.parseInfologSub ('^\[[ 0]*\] SDL:[ ]*', line)
+				if (value):
+					crash.sdl_version = value
+				value = self.parseInfologSub ('^\[[ 0]*\] GLEW:[ ]*', line)
+				if (value):
+					crash.glew_version = value
+				value = self.parseInfologSub ('^\[[ 0]*\] Sound:[ ]*Vendor:[ ]*', line)
+				if (value):
+					crash.al_vendor = value
+				value = self.parseInfologSub ('^\[[ 0]*\] Sound:[ ]*Version:[ ]*', line)
+				if (value):
+					crash.al_version = value
+				value = self.parseInfologSub ('^\[[ 0]*\] Sound:[ ]*Renderer:[ ]*', line)
+				if (value):
+					crash.al_renderer = value
+				value = self.parseInfologSub ('^\[[ 0]*\] Sound:[ ]*AL Extensions:[ ]*', line)
+				if (value):
+					crash.al_extensions = value
+				value = self.parseInfologSub ('^\[[ 0]*\] Sound:[ ]*ALC Extensions:[ ]*', line)
+				if (value):
+					crash.alc_extensions = value
+				value = self.parseInfologSub ('^\[[ 0]*\] Sound:[ ]*Device:[ ]*', line)
+				if (value):
+					crash.al_device = value
+				value = self.parseInfologSub ('^\[[ 0]*\] Sound:[ ]{23}', line)
+				if (value):
+					al_available_devices.append (value)
+				value = self.parseInfologSub ('^\[[ 0]*\] GL:[ ]*', line)
+				if (value):
+					if (not crash.gl_version):
+						crash.gl_version = value
+					elif (not crash.gl_vendor):
 						crash.gl_vendor = value
-					else:
-						if (not crash.gl_renderer):
-							crash.gl_renderer = value
-			
+					elif (not crash.gl_renderer):
+						crash.gl_renderer = value
+			elif (not crash.spring):
+				match = re.search ('^Spring(/d*\.)*', line)
+				if (match):
+					crash.spring = line
+			elif (crash.spring):
+				match = re.search ('^\[[ 0-9]*\] Spring( /d*\.)*.*has crashed.$', line)
+				if (match):
+					crash.crashed = True
 		if (al_available_devices):
 			crash.al_available_devices = "\n".join (al_available_devices)
 		
