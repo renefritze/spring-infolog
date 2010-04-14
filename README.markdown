@@ -5,7 +5,16 @@
 	* sqlite/mysql for db backend
 	* Jinja2
 	* bottle (included)
-	* sprox,toscawidgets
+	* sprox
+	* paste
+	* tw.forms
+	* ToscaWidgets
+	* baeker
+	* genshi
+
+A lot of these can be installed through pypi, eg. wiht python setuptools:
+
+	easy_install {sprox,paste,tw.forms,ToscaWidgets,baeker,genshi}
 	
 
 # Usage
