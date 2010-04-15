@@ -29,7 +29,7 @@ class Crash(Base):
 	al_extensions			= Column( String(100) )
 	alc_extensions			= Column( String(100) )
 	al_device				= Column( String(100) )
-	al_available_devices	= Column( String(255) )
+	al_available_devices	= Column( Text )
 	gl_version				= Column( String(100) )
 	gl_vendor				= Column( String(100) )
 	gl_renderer				= Column( String(100) )
@@ -147,59 +147,59 @@ class Backend:
 			if (re.search ('^\[[ 0]*\]', line)):
 				value = self.parseInfologSub ('^\[[ 0]*\] Using map[ ]*', line)
 				if (value):
-					crash.map = value
+					crash.map = self.dbEncode (value)
 				if (not crash.mod):
 					value = self.parseInfologSub ('^\[[ 0]*\] Using mod[ ]*', line)
 					if (value):
-						crash.mod = value
+						crash.mod = self.dbEncode (value)
 				value = self.parseInfologSub ('^\[[ 0]*\] GameID:[ ]*', line)
 				if (value):
-					self.gameid = value
+					self.gameid = self.dbEncode (value)
 				value = self.parseInfologSub ('^\[[ 0]*\] SDL:[ ]*', line)
 				if (value):
-					crash.sdl_version = value
+					crash.sdl_version = self.dbEncode (value)
 				value = self.parseInfologSub ('^\[[ 0]*\] GLEW:[ ]*', line)
 				if (value):
-					crash.glew_version = value
+					crash.glew_version = self.dbEncode (value)
 				value = self.parseInfologSub ('^\[[ 0]*\] Sound:[ ]*Vendor:[ ]*', line)
 				if (value):
-					crash.al_vendor = value
+					crash.al_vendor = self.dbEncode (value)
 				value = self.parseInfologSub ('^\[[ 0]*\] Sound:[ ]*Version:[ ]*', line)
 				if (value):
-					crash.al_version = value
+					crash.al_version = self.dbEncode (value)
 				value = self.parseInfologSub ('^\[[ 0]*\] Sound:[ ]*Renderer:[ ]*', line)
 				if (value):
-					crash.al_renderer = value
+					crash.al_renderer = self.dbEncode (value)
 				value = self.parseInfologSub ('^\[[ 0]*\] Sound:[ ]*AL Extensions:[ ]*', line)
 				if (value):
-					crash.al_extensions = value
+					crash.al_extensions = self.dbEncode (value)
 				value = self.parseInfologSub ('^\[[ 0]*\] Sound:[ ]*ALC Extensions:[ ]*', line)
 				if (value):
-					crash.alc_extensions = value
+					crash.alc_extensions = self.dbEncode (value)
 				value = self.parseInfologSub ('^\[[ 0]*\] Sound:[ ]*Device:[ ]*', line)
 				if (value):
-					crash.al_device = value
+					crash.al_device = self.dbEncode (value)
 				value = self.parseInfologSub ('^\[[ 0]*\] Sound:[ ]{23}', line)
 				if (value):
 					al_available_devices.append (value)
 				value = self.parseInfologSub ('^\[[ 0]*\] GL:[ ]*', line)
 				if (value):
 					if (not crash.gl_version):
-						crash.gl_version = value
+						crash.gl_version = self.dbEncode (value)
 					elif (not crash.gl_vendor):
-						crash.gl_vendor = value
+						crash.gl_vendor = self.dbEncode (value)
 					elif (not crash.gl_renderer):
-						crash.gl_renderer = value
+						crash.gl_renderer = self.dbEncode (value)
 			elif (not crash.spring):
 				match = re.search ('^Spring(/d*\.)*', line)
 				if (match):
-					crash.spring = line
+					crash.spring = self.dbEncode (line)
 			elif (crash.spring):
 				match = re.search ('^\[[ 0-9]*\] Spring( /d*\.)*.*has crashed.$', line)
 				if (match):
 					crash.crashed = True
 		if (al_available_devices):
-			crash.al_available_devices = "\n".join (al_available_devices)
+			crash.al_available_devices = self.dbEncode ("\n".join (al_available_devices))
 		
 		session.add( crash )
 		session.commit()
@@ -211,3 +211,10 @@ class Backend:
 		match = re.search (preg, line)
 		if (match):
 			return (line.replace (match.group (0), ''))
+	
+	
+	def dbEncode (Self, string):
+		try:
+			return (string.encode('utf8'))
+		except:
+			return ('ufc error')
