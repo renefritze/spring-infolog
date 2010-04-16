@@ -28,6 +28,7 @@ cache_opts = {
     'cache.lock_dir': 	config.get('cache','lock_dir')
 }
 
+is_debug = config.getboolean('site','debug')
 env = Environment(loader=FileSystemLoader('templates'))
 cache = CacheManager(**parse_cache_config_options(cache_opts))
 tasbot = tasbot.bot()

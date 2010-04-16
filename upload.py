@@ -2,18 +2,19 @@
 # -*- coding: utf-8 -*-
 from bottle import route,request,redirect
 import bottle
-from siteglobals import env, db,config,tasbot,cache
+from siteglobals import env, db,config,tasbot,cache,is_debug
 from utils import *
 import hashlib,os,sys
 from zipfile import ZipFile
 import recordlist
-@route('/upload', method='GET')
-def output():
-	try:
-		return env.get_template('upload.html').render( )
+if is_debug:
+	@route('/upload', method='GET')
+	def output():
+		try:
+			return env.get_template('upload.html').render( )
 
-	except Exception, m:
-		return env.get_template('error.html').render(err_msg=str(m))
+		except Exception, m:
+			return env.get_template('error.html').render(err_msg=str(m))
 
 def parseZip( fn ):
 	date_time = ''

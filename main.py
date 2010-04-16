@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from bottle import route, run, debug, PasteServer, send_file, redirect, abort, request, default_app
 import os, index, upload, recordlist, details
-from siteglobals import config
+from siteglobals import config,is_debug
 from tw.api import make_middleware
 
 @route('/images/:filename')
@@ -25,7 +25,6 @@ def favi():
 if __name__=="__main__":
 	port = config.getint('site','port')
 	host = config.get('site','host')
-	is_debug = config.getboolean('site','debug')
 	app = default_app()
 	application = make_middleware(app, {
 		'toscawidgets.framework.default_view': 'jinja2',
