@@ -2,8 +2,7 @@
 from sqlalchemy import *
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import *
-import datetime, os
-import re
+import datetime, os, re, genshi
 
 current_db_rev = 5
 Base = declarative_base()
@@ -43,6 +42,10 @@ class Crash(Base):
 		
 	def basename(self):
 		return os.path.basename( self.filename )
+
+	@property
+	def id_link(self):
+		return genshi.XML('<a href="/details?id=%s">%s</a>' % (self.id, str(self.date)))
 
 class Status(Base):
 	__tablename__	= 'status'

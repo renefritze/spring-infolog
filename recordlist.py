@@ -3,29 +3,21 @@ from bottle import route,request
 from siteglobals import env, db, config, cache
 from utils import *
 from backend import Crash
-from sprox.tablebase import TableBase
-from sprox.fillerbase import TableFiller
+import tw.forms as twf, tw.dynforms as twd
 
-class CrashTableFiller(TableFiller):
-	__model__ = Crash
-
-	def date(self,crash):
-		dates = '<a href="/details?id=%d">%s</a>'%(crash.id,str(crash.date))
-		return dates
-class CrashTable( TableBase ):
-	__model__	= Crash
-	__omit_fields__ = ['id', 'extensions', '__actions__','settings','filename','script']
-	__xml_fields__=['date']
+class CrashGrid(twd.FilteringGrid):
+	datasrc = lambda s: db.sessionmaker().query(Crash).filter( Crash.crashed == True )
+	columns = [('id_link','Date'), ('spring', 'rev.'), ('platform','Platform'),('gl_vendor','GL vendor'),('mod','Mod'),('map','Map')]#,('nick', 'Reporter')]
+	data_filter = ['map', 'mod','spring','platform',]
+	search_cols = ['settings','extensions']
 
 @cache.cache('list_output', expire=60)
 @route('/list', method='GET')
+@route('/list', method='POST')
 def output():
 	try:
-		session = db.sessionmaker()
-		crash_table = CrashTable(session)
-		crash_filler = CrashTableFiller(session)
-		ret = env.get_template('list.html').render( widget=crash_table, value=crash_filler.get_value() )
-		session.close()
+		crash_grid = CrashGrid('Crashes')
+		ret = env.get_template('list.html').render( crash_grid=crash_grid, kw=dict(request.POST) )
 		return ret
 
 	except Exception, m:

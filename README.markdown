@@ -4,8 +4,7 @@
 	* SqlAlchemy >=0.5
 	* sqlite/mysql for db backend
 	* Jinja2
-	* bottle (included)
-	* sprox
+	* bottle (included, newer will break auth)
 	* paste
 	* tw.forms
 	* ToscaWidgets
