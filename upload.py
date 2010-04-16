@@ -48,10 +48,14 @@ def output_post():
 		return env.get_template('error.html').render(err_msg=str(m))
 
 if __name__=="__main__":
+	failed = []
+	sys.stdout.write( 'parsing' )
 	for fn in sys.argv[1:]:
 		try:
-			print 'parsing %s'%fn
+			sys.stdout.write( '.' )
+			sys.stdout.flush()
 			parseZip( fn )
-			print '\t...done'
 		except Exception, e:
-			print '\tfailed: %s'%str(e)
+			failed.append( 'failed: %s: %s'%(fn, str(e) ) )
+	print '\nsuccesfully imported %d of %d records'%(len(sys.argv[1:]) - len(failed), len(sys.argv[1:]) )
+	print '\n'.join(failed)
