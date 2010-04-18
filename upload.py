@@ -19,14 +19,35 @@ if is_debug:
 def parseZip( fn ):
 	date_time = ''
 	members = dict()
+	removemembers = 0
 	zipfile = ZipFile( fn )
 	cache.invalidate(recordlist.output, 'list_output', )
-	files_of_interest = ['infolog.txt','ext.txt','platform.txt','script.txt','settings.txt','unitsync.log']
+	files_of_interest = ['infolog.txt','ext.txt','platform.txt','script.txt','settings.txt','unitsync.log','client.txt','information.txt','demo.sdf']
+	
 	for info in zipfile.infolist():
-		if info.filename in files_of_interest and info.file_size < 20e5:
+		if info.filename in files_of_interest and info.file_size < 5 * 1024 * 1024:
 			members[info.filename] = zipfile.read( info.filename )
 			if info.filename == 'infolog.txt':
 				date_time = info.date_time
+		else:
+			removemembers = 1
+	
+	if removemembers:
+		newzipfile = ZipFile (fn + '.new', 'w')
+		tmpfilename = '/tmp/' + os.path.basename (fn) + '.tmp'
+		for file in members.keys ():
+			tmpfile = open (tmpfilename, 'w')
+			tmpfile.write (zipfile.read (file))
+			tmpfile.close ()
+			newzipfile.write (tmpfilename, file)
+			os.remove (tmpfilename)
+		newzipfile.close ()
+		zipfile.close ()
+		os.rename (fn, fn + '.orig')
+		os.rename (fn + '.new', fn)
+	else:
+		zipfile.close ()
+	
 	return db.parseZipMembers( fn, members, date_time )
 
 @route('/upload', method='POST')
