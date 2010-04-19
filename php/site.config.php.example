@@ -1,0 +1,11 @@
+<?
+$Config = array (
+	"MySQL" => array (
+		"host" => "127.0.0.1",	// MySQL hostname (ip:port if not standard port)
+		"user" => "webuser",	// MySQL username
+		"passwd" => "0_o",		// MySQL password
+		"db" => "dbInfolog",	// MySQL database for the infologs
+	),
+);
+global $Config;
+?>
