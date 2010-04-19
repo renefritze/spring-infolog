@@ -18,7 +18,7 @@ class Crash(Base):
 	platform				= Column( String(100) )
 	spring					= Column( String(100) )
 	map						= Column( String(100) )
-	mod						= Column( String(100) )
+	gamemod					= Column( String(100) )
 	gameid					= Column( String(100) )
 	sdl_version				= Column( String(100) )
 	glew_version			= Column( String(100) )
@@ -152,10 +152,10 @@ class Backend:
 					value = self.parseInfologSub ('^\[[ 0]*\] Using map[ ]*', line)
 					if (value):
 						crash.map = self.dbEncode (value)
-					if (not crash.mod):
+					if (not crash.gamemod):
 						value = self.parseInfologSub ('^\[[ 0]*\] Using mod[ ]*', line)
 						if (value):
-							crash.mod = self.dbEncode (value)
+							crash.gamemod = self.dbEncode (value)
 					value = self.parseInfologSub ('^\[[ 0]*\] GameID:[ ]*', line)
 					if (value):
 						self.gameid = self.dbEncode (value)

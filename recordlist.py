@@ -7,8 +7,8 @@ import tw.forms as twf, tw.dynforms as twd
 
 class CrashGrid(twd.FilteringGrid):
 	datasrc = lambda s: db.sessionmaker().query(Crash).filter( Crash.crashed == True )
-	columns = [('id_link','Date'), ('spring', 'rev.'), ('platform','Platform'),('gl_vendor','GL vendor'),('mod','Mod'),('map','Map')]#,('nick', 'Reporter')]
-	data_filter = ['map', 'mod','spring','platform',]
+	columns = [('id_link','Date'), ('spring', 'rev.'), ('platform','Platform'),('gl_vendor','GL vendor'),('gamemod','Mod'),('map','Map')]#,('nick', 'Reporter')]
+	data_filter = ['map', 'gamemod','spring','platform',]
 	search_cols = ['settings','extensions']
 
 @cache.cache('list_output', expire=60)
