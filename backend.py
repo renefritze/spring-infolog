@@ -11,9 +11,12 @@ class Crash(Base):
 	__tablename__ 			= 'records'
 	id 						= Column( Integer, primary_key=True,index=True )
 	date 					= Column( DateTime )
-	extensions				= Column( PickleType )
-	settings				= Column( PickleType )
-	script					= Column( PickleType )
+#	extensions				= Column( PickleType )
+#	settings				= Column( PickleType )
+#	script					= Column( PickleType )
+	extensions				= Column( Text )
+	settings				= Column( Text )
+	script					= Column( Text )
 	filename				= Column( String(255) )
 	platform				= Column( String(100) )
 	spring					= Column( String(100) )
@@ -33,10 +36,9 @@ class Crash(Base):
 	gl_vendor				= Column( String(100) )
 	gl_renderer				= Column( String(100) )
 	crashed					= Column( Boolean, default=False )
+	lobby_client_version	= Column ( String(30) )
 	
 
-	important_settings = ['Shadows']
-	
 	def __init__(self):
 		self.date = datetime.datetime.now()
 		
@@ -135,15 +137,19 @@ class Backend:
 			crash.date = datetime.datetime (date_time[0], date_time[1], date_time[2], date_time[3], date_time[4], date_time[5])
 		
 		if data.has_key( 'ext.txt' ):
-			crash.extensions = data['ext.txt'].splitlines()
+			crash.extensions = data['ext.txt']
 		if data.has_key( 'script.txt' ):
-			crash.script = data['script.txt'].splitlines()
+			crash.script = data['script.txt']
 		if data.has_key( 'settings.txt' ):
-			crash.settings = dict( zip( map( lambda line: line.split('=')[0], data['settings.txt'].splitlines() ), \
-								map( lambda line: line.split('=')[1], data['settings.txt'].splitlines() ) ) )
+			crash.settings = data['settings.txt']
 		if data.has_key( 'platform.txt' ):
 			crash.platform = data['platform.txt'].strip()
 		crash.status = None
+		
+		if data.has_key ('client.txt'):
+			temp = data['client.txt'].splitlines()
+			if temp[0]:
+				crash.lobby_client_version = temp[0]
 		
 		if data.has_key ('infolog.txt'):
 			al_available_devices = []

@@ -7,6 +7,8 @@ from backend import Crash
 @route('/details', method='GET')
 def output():
 	try:
+		important_settings = ['Shadows']
+
 		session = db.sessionmaker()
 		id = getSingleField( 'id', request )
 		if not id:
@@ -16,7 +18,7 @@ def output():
 			raise ElementNotFoundException( id )
 		upload_dir = config.get('site','uploads')
 		ret = env.get_template('details.html').render( crash=crash, \
-			upload_dir=upload_dir,settings=dict(filter(lambda i: i[0] in Crash.important_settings, crash.settings.items() ) ) )
+			upload_dir=upload_dir,settings=dict(filter(lambda i: i[0] in important_settings, dict( zip( map( lambda line: line.split('=')[0], crash.settings.splitlines() ), map( lambda line: line.split('=')[1], crash.settings.splitlines() ) ) ).items () ) ) )
 		session.close()
 		return ret
 
