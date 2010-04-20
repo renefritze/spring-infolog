@@ -11,14 +11,11 @@ class Crash(Base):
 	__tablename__ 			= 'records'
 	id 						= Column( Integer, primary_key=True,index=True )
 	date 					= Column( DateTime )
-#	extensions				= Column( PickleType )
-#	settings				= Column( PickleType )
-#	script					= Column( PickleType )
 	extensions				= Column( Text )
 	settings				= Column( Text )
 	script					= Column( Text )
 	filename				= Column( String(255) )
-	platform				= Column( String(100) )
+	platform				= Column( String(255) )
 	spring					= Column( String(100) )
 	map						= Column( String(100) )
 	gamemod					= Column( String(100) )
@@ -28,7 +25,7 @@ class Crash(Base):
 	al_vendor				= Column( String(100) )
 	al_version				= Column( String(100) )
 	al_renderer				= Column( String(100) )
-	al_extensions			= Column( String(255) )
+	al_extensions			= Column( Text )
 	alc_extensions			= Column( String(255) )
 	al_device				= Column( String(100) )
 	al_available_devices	= Column( Text )
@@ -156,8 +153,14 @@ class Backend:
 		
 		if data.has_key ('infolog.txt'):
 			al_available_devices = []
+			platform = []
 			for line in data['infolog.txt'].splitlines ():
-				if (re.search ('^\[[ 0]*\]', line)):
+				if re.search ('^OS: ', line):
+					platform.append (self.parseInfologSub ('^OS: ', line))
+				elif len (platform) == 1 and re.search ('^' + platform[0], line):
+					platform[0] = line
+				
+				elif (re.search ('^\[[ 0]*\]', line)):
 					value = self.parseInfologSub ('^\[[ 0]*\] Using map[ ]*', line)
 					if (value):
 						crash.map = self.dbEncode (value)
@@ -213,6 +216,8 @@ class Backend:
 						crash.crashed = True
 			if (al_available_devices):
 				crash.al_available_devices = self.dbEncode ("\n".join (al_available_devices))
+			if platform and not re.search ('^Linux', platform[0]):
+				crash.platform = ' '.join (platform)
 		
 		session.add( crash )
 		session.commit()
