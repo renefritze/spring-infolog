@@ -36,7 +36,8 @@ class Crash(Base):
 	gl_vendor				= Column( String(100) )
 	gl_renderer				= Column( String(100) )
 	crashed					= Column( Boolean, default=False )
-	lobby_client_version	= Column ( String(30) )
+	lobby_client_version	= Column( String(30) )
+	contains_demo			= Column( Boolean, default=False )
 	
 
 	def __init__(self):
@@ -150,6 +151,8 @@ class Backend:
 			temp = data['client.txt'].splitlines()
 			if temp[0]:
 				crash.lobby_client_version = temp[0]
+		if data.has_key ('demo.sdf'):
+			crash.contains_demo = True
 		
 		if data.has_key ('infolog.txt'):
 			al_available_devices = []
