@@ -19,7 +19,7 @@ class Crash(Base):
 	spring					= Column( String(100) )
 	map						= Column( String(100) )
 	gamemod					= Column( String(100) )
-	gameid					= Column( String(100) )
+	gameid					= Column( String(32) )
 	sdl_version				= Column( String(100) )
 	glew_version			= Column( String(100) )
 	al_vendor				= Column( String(100) )
@@ -135,19 +135,17 @@ class Backend:
 			crash.date = datetime.datetime (date_time[0], date_time[1], date_time[2], date_time[3], date_time[4], date_time[5])
 		
 		if data.has_key( 'ext.txt' ):
-			crash.extensions = data['ext.txt']
+			crash.extensions = self.dbEncode (data['ext.txt'])
 		if data.has_key( 'script.txt' ):
-			crash.script = data['script.txt']
+			crash.script = self.dbEncode (data['script.txt'])
 		if data.has_key( 'settings.txt' ):
-			crash.settings = data['settings.txt']
-		if data.has_key( 'platform.txt' ):
-			crash.platform = data['platform.txt'].strip()
+			crash.settings = self.dbEncode (data['settings.txt'])
 		crash.status = None
 		
 		if data.has_key ('client.txt'):
 			temp = data['client.txt'].splitlines()
 			if temp[0]:
-				crash.lobby_client_version = temp[0]
+				crash.lobby_client_version = self.dbEncode (temp[0])
 		if data.has_key ('demo.sdf'):
 			crash.contains_demo = True
 		
@@ -170,7 +168,7 @@ class Backend:
 							crash.gamemod = self.dbEncode (value)
 					value = self.parseInfologSub ('^\[[ 0]*\] GameID:[ ]*', line)
 					if (value):
-						self.gameid = self.dbEncode (value)
+						crash.gameid = self.dbEncode (value)
 					value = self.parseInfologSub ('^\[[ 0]*\] SDL:[ ]*', line)
 					if (value):
 						crash.sdl_version = self.dbEncode (value)
@@ -217,7 +215,11 @@ class Backend:
 			if (al_available_devices):
 				crash.al_available_devices = self.dbEncode ("\n".join (al_available_devices))
 			if platform and not re.search ('^Linux', platform[0]):
-				crash.platform = ' '.join (platform)
+				crash.platform = self.dbEncode (' '.join (platform))
+			elif not data.has_key( 'platform.txt' ):
+				crash.platform = self.dbEncode (' '.join (platform))
+			else:
+				crash.platform = self.dbEncode (data['platform.txt'].strip ())
 		
 		session.add( crash )
 		session.commit()
