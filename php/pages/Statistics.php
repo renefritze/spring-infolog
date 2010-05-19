@@ -3,7 +3,7 @@ $MySQL_Result = DB_Query ("SELECT COUNT(id) AS Reports, crashed, lobby_client_ve
 while ($Data = mysql_fetch_assoc ($MySQL_Result))	{
 	$Return['Reports']['Total'] += $Data['Reports'];
 	$Return['Reports']['Crashed'][$Data['crashed']] += $Data['Reports'];
-	$Return['Reports']['Clients'][$Data['lobby_client_version']] += $Data['Reports'];
+	$Return['Reports']['Clients'][($Data['lobby_client_version'] ? $Data['lobby_client_version'] : "SpringLobby (unknown)")] += $Data['Reports'];
 	$Return['Reports']['Demo'][$Data['contains_demo']] += $Data['Reports'];
 }
 ?>
