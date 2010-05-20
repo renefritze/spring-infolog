@@ -52,6 +52,14 @@ class Status(Base):
 	internal_name	= Column( String(20), primary_key=True,index=True )
 	display_name	= Column( String(60) )
 
+
+class Settings(Base):
+	__tablename__ 			= 'settings'
+	id 						= Column( Integer, primary_key=True )
+	setting					= Column( String(255), primary_key=True )
+	value					= Column( String(255) )
+
+
 class DbConfig(Base):
 	__tablename__	= 'config'
 	dbrevision		= Column( Integer, primary_key=True )
@@ -223,6 +231,18 @@ class Backend:
 		
 		session.add( crash )
 		session.commit()
+		
+		for x in data['settings.txt'].splitlines ():
+			if x and x.index ('=') != -1 and x[:x.index ('=')]:
+				settings = Settings()
+				settings.id = crash.id
+				settings.setting = x[:x.index ('=')]
+				settings.value = x[x.index ('=') + 1:]
+				
+				session.add( settings )
+				session.commit()
+		
+
 		session.close()
 		return crash_id
 	
