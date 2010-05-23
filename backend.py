@@ -102,7 +102,7 @@ class DbConnectionLostException( Exception ):
 
 class Backend:
 	def Connect(self):
-		self.engine = create_engine(self.alchemy_uri, echo=self.verbose)
+		self.engine = create_engine(self.alchemy_uri, echo=self.verbose, pool_size=20, pool_recycle=300)
 		self.metadata = Base.metadata
 		self.metadata.bind = self.engine
 		self.metadata.create_all(self.engine)
