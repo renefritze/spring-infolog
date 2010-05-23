@@ -14,7 +14,7 @@ class Crash(Base):
 	extensions				= Column( Text )
 	settings				= Column( Text )	# not used by PHP
 	script					= Column( Text )
-	infolog					= Column( Text )
+	infolog					= Column( Text (200000))
 	filename				= Column( String(255) )
 	platform				= Column( String(255) )
 	spring					= Column( String(100) )
@@ -34,7 +34,7 @@ class Crash(Base):
 	gl_vendor				= Column( String(100) )
 	gl_renderer				= Column( String(100) )
 	crashed					= Column( Boolean, default=False )
-	lobby_client_version	= Column( String(30) )
+	lobby_client_version	= Column( String(64) )
 	contains_demo			= Column( Boolean, default=False )
 	
 
