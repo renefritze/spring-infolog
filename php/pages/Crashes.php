@@ -1,5 +1,5 @@
 <?
-$Data = GetCrashes ();
+$Data = ($Post['Version'] == 1 ? GetCrashes2 () : GetCrashes ());
 echo "<!---";
 //print_r ($Data);
 echo "--->";

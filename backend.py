@@ -12,8 +12,9 @@ class Crash(Base):
 	id 						= Column( Integer, primary_key=True,index=True )
 	date 					= Column( DateTime )
 	extensions				= Column( Text )
-	settings				= Column( Text )
+	settings				= Column( Text )	# not used by PHP
 	script					= Column( Text )
+	infolog					= Column( Text )
 	filename				= Column( String(255) )
 	platform				= Column( String(255) )
 	spring					= Column( String(100) )
@@ -58,6 +59,16 @@ class Settings(Base):
 	id 						= Column( Integer, primary_key=True )
 	setting					= Column( String(255), primary_key=True )
 	value					= Column( String(255) )
+
+
+class Stacktrace(Base):
+	__tablename__ 			= 'stacktrace'
+	id						= Column( Integer, primary_key=True )
+	line					= Column (Integer, primary_key=True )
+	file					= Column( String(128) )
+	functionname			= Column( String(128) )
+	functionat				= Column( String(16) )
+	address					= Column( String(10) )
 
 
 class DbConfig(Base):
@@ -158,8 +169,10 @@ class Backend:
 			crash.contains_demo = True
 		
 		if data.has_key ('infolog.txt'):
+			crash.infolog = self.dbEncode (data['infolog.txt'])
 			al_available_devices = []
 			platform = []
+			is_stacktrace = False
 			for line in data['infolog.txt'].splitlines ():
 				if re.search ('^OS: ', line):
 					platform.append (self.parseInfologSub ('^OS: ', line))
@@ -220,6 +233,38 @@ class Backend:
 					match = re.search ('^\[[ 0-9]*\] Spring( /d*\.)*.*has crashed.$', line)
 					if (match):
 						crash.crashed = True
+				
+				if (is_stacktrace):
+					temp = {}
+					value = self.parseInfologSub ('^\[[ 0-9]*\] ', line)
+					value = value.split (' ')
+					temp['line'] = value[0][1:-1]
+					temp['address'] = value[len (value) - 1][1:-1]
+					if (value[len (value) - 2][-1] == ')'):
+						temp['file'] = value[len (value) - 2][:value[len (value) - 2].rfind ('(')]
+						temp['function'] = value[len (value) - 2][value[len (value) - 2].rfind ('(') + 1:value[len (value) - 2].rfind ('+')]
+						temp['functionat'] = value[len (value) - 2][value[len (value) - 2].rfind ('+') + 1:-1]
+					else:
+						temp['file'] = value[len (value) - 2]
+					temp['file'] = temp['file'][max (temp['file'].rfind ('\\'), temp['file'].rfind ('/')) + 1:]
+					
+					stacktrace = Stacktrace()
+					stacktrace.id = crash.id
+					stacktrace.line = int (temp['line'])
+					stacktrace.file = temp['file']
+					if (temp.has_key ('function')):
+						stacktrace.functionname = temp['function']
+					if (temp.has_key ('functionat')):
+						stacktrace.functionat = temp['functionat']
+					stacktrace.address = temp['address']
+					session.add( stacktrace )
+					session.commit()
+				elif (crash.crashed and is_stacktrace == False):
+					match = re.search ('^\[[ 0-9]*\] Stacktrace:', line)
+					if (match):
+						is_stacktrace = True
+
+				
 			if (al_available_devices):
 				crash.al_available_devices = self.dbEncode ("\n".join (al_available_devices))
 			if platform and not re.search ('^Linux', platform[0]):
@@ -247,11 +292,13 @@ class Backend:
 		return crash_id
 	
 	
-	def parseInfologSub (self, preg, line):
+	def parseInfologSub (self, preg, line, removematch = 1):
 		match = re.search (preg, line)
 		if (match):
-			return (line.replace (match.group (0), ''))
-	
+			if (removematch):
+				return (line.replace (match.group (0), ''))
+			else:
+				return (match.group (0))
 	
 	def dbEncode (Self, string):
 		try:
