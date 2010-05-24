@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # TODO - don't allow zero byte files to be stored
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
@@ -20,7 +21,7 @@ if is_debug:
 def parseZip( fn ):
 	date_time = ''
 	members = dict()
-	removemembers = 0
+	removemembers = False
 	zipfile = ZipFile( fn )
 	cache.invalidate(recordlist.output, 'list_output', )
 	files_of_interest = ['infolog.txt','ext.txt','platform.txt','script.txt','settings.txt','unitsync.log','client.txt','information.txt','demo.sdf']
@@ -31,7 +32,7 @@ def parseZip( fn ):
 			if info.filename == 'infolog.txt':
 				date_time = info.date_time
 		else:
-			removemembers = 1
+			removemembers = True
 	
 	if removemembers:
 		newzipfile = ZipFile (fn + '.new', 'w')
