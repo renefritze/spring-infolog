@@ -4,7 +4,7 @@ $Stacktrace = GetStacktrace ($Post['ID']);
 ?>
 <TABLE>
 <TR><TH COLSPAN="2">Crash report details</TH></TR>
-<TR><TD>Buildserv command:</TD><TD>!translate file=http://infologs.zydox.se/?Infolog&ID=<? echo $Post['ID']; ?></TD></TR>
+<TR><TD>Buildserv command:</TD><TD>!translate file=http://infologs.zydox.se/?Infolog&NoHTML=1&ID=<? echo $Post['ID']; ?></TD></TR>
 <TR><TH CLASS="Sub" COLSPAN="2">Stacktrace</TH></TR>
 <TR><TD CLASS="NoPad" COLSPAN="2"><TABLE CELLSPACING="0" CELLPADDING="0">
 <COL WIDTH="20"><COL WIDTH="90"><COL WIDTH="330"><COL WIDTH="60"><COL WIDTH="100">

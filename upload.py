@@ -1,3 +1,4 @@
+# TODO - don't allow zero byte files to be stored
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from bottle import route,request,redirect

@@ -14,7 +14,6 @@ class Crash(Base):
 	extensions				= Column( Text )
 	settings				= Column( Text )	# not used by PHP
 	script					= Column( Text )
-	infolog					= Column( Text (200000))
 	filename				= Column( String(255) )
 	platform				= Column( String(255) )
 	spring					= Column( String(100) )
@@ -64,11 +63,14 @@ class Settings(Base):
 class Stacktrace(Base):
 	__tablename__ 			= 'stacktrace'
 	id						= Column( Integer, primary_key=True )
-	line					= Column (Integer, primary_key=True )
+	frame					= Column( Integer, primary_key=True )
+	type					= Column( String(10), primary_key=True)
+	line					= Column( Integer, primary_key=True )
 	file					= Column( String(128) )
 	functionname			= Column( String(128) )
 	functionat				= Column( String(16) )
 	address					= Column( String(10) )
+	raw						= Column( String(255) )
 
 
 class DbConfig(Base):
@@ -169,10 +171,12 @@ class Backend:
 			crash.contains_demo = True
 		
 		if data.has_key ('infolog.txt'):
-			crash.infolog = self.dbEncode (data['infolog.txt'])
 			al_available_devices = []
 			platform = []
 			is_stacktrace = False
+			stacktrace_type = ''
+			stacktrace_key = 0
+			
 			for line in data['infolog.txt'].splitlines ():
 				if re.search ('^OS: ', line):
 					platform.append (self.parseInfologSub ('^OS: ', line))
@@ -234,35 +238,44 @@ class Backend:
 					if (match):
 						crash.crashed = True
 				
-				if (is_stacktrace):
-					temp = {}
-					value = self.parseInfologSub ('^\[[ 0-9]*\] ', line)
-					value = value.split (' ')
-					temp['line'] = value[0][1:-1]
-					temp['address'] = value[len (value) - 1][1:-1]
-					if (value[len (value) - 2][-1] == ')'):
-						temp['file'] = value[len (value) - 2][:value[len (value) - 2].rfind ('(')]
-						temp['function'] = value[len (value) - 2][value[len (value) - 2].rfind ('(') + 1:value[len (value) - 2].rfind ('+')]
-						temp['functionat'] = value[len (value) - 2][value[len (value) - 2].rfind ('+') + 1:-1]
-					else:
-						temp['file'] = value[len (value) - 2]
-					temp['file'] = temp['file'][max (temp['file'].rfind ('\\'), temp['file'].rfind ('/')) + 1:]
-					
-					stacktrace = Stacktrace()
-					stacktrace.id = crash.id
-					stacktrace.line = int (temp['line'])
-					stacktrace.file = temp['file']
-					if (temp.has_key ('function')):
-						stacktrace.functionname = temp['function']
-					if (temp.has_key ('functionat')):
-						stacktrace.functionat = temp['functionat']
-					stacktrace.address = temp['address']
-					session.add( stacktrace )
-					session.commit()
-				elif (crash.crashed and is_stacktrace == False):
+				match = re.search ('^\[[ 0-9]*\] Stacktrace \(', line)
+				if (match):
+					is_stacktrace = True
+					stacktrace_type = 'sim'
+				else:
 					match = re.search ('^\[[ 0-9]*\] Stacktrace:', line)
 					if (match):
 						is_stacktrace = True
+						stacktrace_type = 'regular'
+					elif (is_stacktrace and re.search ('^\[[ 0-9]*\] \([0-9]*\) ', line)):
+						stacktrace_key = int (self.parseInfologSub ('^\[[ 0-9]*\]', line, 0)[1:-1])
+						temp = {}
+						value = self.parseInfologSub ('^\[[ 0-9]*\] ', line)
+						value = value.split (' ')
+						temp['line'] = value[0][1:-1]
+						temp['address'] = value[len (value) - 1][1:-1]
+						if (value[len (value) - 2][-1] == ')'):
+							temp['file'] = value[len (value) - 2][:value[len (value) - 2].rfind ('(')]
+							temp['function'] = value[len (value) - 2][value[len (value) - 2].rfind ('(') + 1:value[len (value) - 2].rfind ('+')]
+							temp['functionat'] = value[len (value) - 2][value[len (value) - 2].rfind ('+') + 1:-1]
+						else:
+							temp['file'] = value[len (value) - 2]
+						temp['file'] = temp['file'][max (temp['file'].rfind ('\\'), temp['file'].rfind ('/')) + 1:]
+						
+						stacktrace = Stacktrace()
+						stacktrace.id = crash.id
+						stacktrace.frame = stacktrace_key
+						stacktrace.type = stacktrace_type
+						stacktrace.raw = self.dbEncode (line)
+						stacktrace.line = int (temp['line'])
+						stacktrace.file = temp['file']
+						if (temp.has_key ('function')):
+							stacktrace.functionname = temp['function']
+						if (temp.has_key ('functionat')):
+							stacktrace.functionat = temp['functionat']
+						stacktrace.address = temp['address']
+						session.add( stacktrace )
+						session.commit()
 
 				
 			if (al_available_devices):
@@ -277,16 +290,19 @@ class Backend:
 		session.add( crash )
 		session.commit()
 		
-		for x in data['settings.txt'].splitlines ():
-			if x and x.index ('=') != -1 and x[:x.index ('=')]:
-				settings = Settings()
-				settings.id = crash.id
-				settings.setting = x[:x.index ('=')]
-				settings.value = x[x.index ('=') + 1:]
-				
-				session.add( settings )
-				session.commit()
-		
+		if data.has_key ('settings.txt'):
+			set_settings = {}
+			for x in data['settings.txt'].splitlines ():
+				if x and x.index ('=') != -1 and x[:x.index ('=')]:
+					key = x[:x.index ('=')].lower ()
+					if not set_settings.has_key (key):
+						settings = Settings()
+						settings.id = crash.id
+						settings.setting = x[:x.index ('=')]
+						settings.value = x[x.index ('=') + 1:]
+						set_settings[key] = 1
+						session.add( settings )
+						session.commit()
 
 		session.close()
 		return crash_id
