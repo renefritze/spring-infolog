@@ -290,6 +290,7 @@ class Backend:
 		session.add( crash )
 		session.commit()
 		
+		settingslist = []
 		if data.has_key ('settings.txt'):
 			set_settings = {}
 			for x in data['settings.txt'].splitlines ():
@@ -301,8 +302,10 @@ class Backend:
 						settings.setting = x[:x.index ('=')]
 						settings.value = x[x.index ('=') + 1:]
 						set_settings[key] = 1
-						session.add( settings )
-						session.commit()
+						settingslist.append( settings )
+		
+		session.add_all( settingslist )
+		session.commit()
 
 		session.close()
 		return crash_id
