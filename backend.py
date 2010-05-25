@@ -9,7 +9,7 @@ Base = declarative_base()
 
 class Crash(Base):
 	__tablename__ 			= 'records'
-	id 						= Column( Integer, primary_key=True,index=True )
+	id 						= Column( Integer, primary_key=True )
 	date 					= Column( DateTime )
 	extensions				= Column( Text )
 	script					= Column( Text )
@@ -50,7 +50,7 @@ class Crash(Base):
 
 class Status(Base):
 	__tablename__	= 'status'
-	internal_name	= Column( String(20), primary_key=True,index=True )
+	internal_name	= Column( String(20), primary_key=True )
 	display_name	= Column( String(60) )
 
 
@@ -64,9 +64,10 @@ class Settings(Base):
 class Stacktrace(Base):
 	__tablename__ 			= 'stacktrace'
 	id						= Column( Integer, ForeignKey( Crash.id ), primary_key=True )
-	frame					= Column( Integer, primary_key=True )
-	type					= Column( String(10), primary_key=True)
-	line					= Column( Integer, primary_key=True )
+	stacktrace_id			= Column( Integer, primary_key=True )
+	frame					= Column( Integer )
+	type					= Column( String(10))
+	line					= Column( Integer )
 	file					= Column( String(128) )
 	functionname			= Column( String(128) )
 	functionat				= Column( String(16) )
@@ -175,7 +176,8 @@ class Backend:
 			is_stacktrace = False
 			stacktrace_type = ''
 			stacktrace_key = 0
-			stacktrace_list = []
+			stacktrace_id = 0
+			stacktracelist = []
 			
 			for line in data['infolog.txt'].splitlines ():
 				if re.search ('^OS: ', line):
@@ -248,6 +250,7 @@ class Backend:
 						is_stacktrace = True
 						stacktrace_type = 'regular'
 					elif (is_stacktrace and re.search ('^\[[ 0-9]*\] \([0-9]*\) ', line)):
+						stacktrace_id = stacktrace_id + 1
 						stacktrace_key = int (self.parseInfologSub ('^\[[ 0-9]*\]', line, 0)[1:-1])
 						temp = {}
 						value = self.parseInfologSub ('^\[[ 0-9]*\] ', line)
@@ -264,6 +267,7 @@ class Backend:
 						
 						stacktrace = Stacktrace()
 						stacktrace.id = crash.id
+						stacktrace.stacktrace_id = stacktrace_id
 						stacktrace.frame = stacktrace_key
 						stacktrace.type = stacktrace_type
 						stacktrace.raw = self.dbEncode (line)
@@ -274,10 +278,7 @@ class Backend:
 						if (temp.has_key ('functionat')):
 							stacktrace.functionat = temp['functionat']
 						stacktrace.address = temp['address']
-						stacktrace_list.append( stacktrace )
-			session.add_all( stacktrace_list )
-			session.commit()
-
+						stacktracelist.append ( stacktrace )
 				
 			if (al_available_devices):
 				crash.al_available_devices = self.dbEncode ("\n".join (al_available_devices))
@@ -288,6 +289,10 @@ class Backend:
 			else:
 				crash.platform = self.dbEncode (data['platform.txt'].strip ())
 		
+			if len (stacktracelist) > 0:
+				session.add_all( stacktracelist )
+				session.commit()
+
 		session.add( crash )
 		session.commit()
 		
