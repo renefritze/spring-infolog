@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 # TODO - don't allow zero byte files to be stored
 
-# -*- coding: utf-8 -*-
 from bottle import route,request,redirect
 import bottle
 from siteglobals import env, db,config,tasbot,cache,is_debug
