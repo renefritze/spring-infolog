@@ -17,8 +17,8 @@ def output():
 		if not crash:
 			raise ElementNotFoundException( id )
 		upload_dir = config.get('site','uploads')
-		ret = env.get_template('details.html').render( crash=crash, \
-			upload_dir=upload_dir,settings=dict(filter(lambda i: i[0] in important_settings, dict( zip( map( lambda line: line.split('=')[0], crash.settings.splitlines() ), map( lambda line: line.split('=')[1], crash.settings.splitlines() ) ) ).items () ) ) )
+		print crash.stacktrace
+		ret = env.get_template('details.html').render( crash=crash, upload_dir=upload_dir )
 		session.close()
 		return ret
 

@@ -1,19 +1,21 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1> Stuff from {{ crash.date }} </h1>
-<ul>
-	<li>Description: {{ crash.description }}</li>
-	<li>Platform: {{ crash.platform }}</li>
-</ul>
-<a href="{{ upload_dir }}/{{ crash.basename() }}">Download
-<h2>extensions</h2>
-	{{ crash.extensions }}
+<TABLE>
+<TR><TH COLSPAN="2">Crash report details</TH></TR>
+<TR><TD>Buildserv command:</TD><TD>!translate file=http://infologs.zydox.se/?Infolog&NoHTML=1&ID={{ crash.id }}</TD></TR>
+<TR><TH CLASS="Sub" COLSPAN="2">Stacktrace</TH></TR>
+<TR><TD CLASS="NoPad" COLSPAN="2"><TABLE CELLSPACING="0" CELLPADDING="0">
+<COL WIDTH="20"><COL WIDTH="90"><COL WIDTH="330"><COL WIDTH="60"><COL WIDTH="100">
 
-<h2>important settings</h2>
-{{ settings }}
-<h2 >all settings</h2>
-{{ crash.settings }}
+{% for row in crash.stacktrace %}
+	<TR>
+		<TD>{{ row.line }}</TD>
+		<TD>{{ row.file }}</TD>
+		<TD>{{ row.functionname }}</TD>
+		<TD>{{ row.functionat }}</TD>
+		<TD>{{ row.functionat }}</TD>
+	</TR>
+{% endfor %}
 
 {% endblock %}
-

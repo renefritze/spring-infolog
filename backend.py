@@ -12,7 +12,6 @@ class Crash(Base):
 	id 						= Column( Integer, primary_key=True,index=True )
 	date 					= Column( DateTime )
 	extensions				= Column( Text )
-	settings				= Column( Text )	# not used by PHP
 	script					= Column( Text )
 	filename				= Column( String(255) )
 	platform				= Column( String(255) )
@@ -36,6 +35,8 @@ class Crash(Base):
 	lobby_client_version	= Column( String(64) )
 	contains_demo			= Column( Boolean, default=False )
 	
+	settings = relation( 'Settings', order_by='Settings.setting.desc' )
+	stacktrace = relation( 'Stacktrace', order_by='Stacktrace.frame' )
 
 	def __init__(self):
 		self.date = datetime.datetime.now()
@@ -55,14 +56,14 @@ class Status(Base):
 
 class Settings(Base):
 	__tablename__ 			= 'settings'
-	id 						= Column( Integer, primary_key=True )
+	id 						= Column( Integer, ForeignKey( Crash.id ), primary_key=True )
 	setting					= Column( String(255), primary_key=True )
 	value					= Column( String(255) )
 
 
 class Stacktrace(Base):
 	__tablename__ 			= 'stacktrace'
-	id						= Column( Integer, primary_key=True )
+	id						= Column( Integer, ForeignKey( Crash.id ), primary_key=True )
 	frame					= Column( Integer, primary_key=True )
 	type					= Column( String(10), primary_key=True)
 	line					= Column( Integer, primary_key=True )
