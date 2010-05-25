@@ -1,6 +1,6 @@
 <?
 global $Global;
-$Global['BaseURL'] = $_SERVER['HTTP_HOST'];
+$Global['BaseURL'] = $_SERVER['HTTP_HOST'] . dirname ($_SERVER['REQUEST_URI']);
 
 function DoxTime ()	{
 	$Time = microtime ();
