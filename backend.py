@@ -160,8 +160,6 @@ class Backend:
 			crash.extensions = self.dbEncode (data['ext.txt'])
 		if data.has_key( 'script.txt' ):
 			crash.script = self.dbEncode (data['script.txt'])
-		if data.has_key( 'settings.txt' ):
-			crash.settings = self.dbEncode (data['settings.txt'])
 		crash.status = None
 		
 		if data.has_key ('client.txt'):
@@ -177,6 +175,7 @@ class Backend:
 			is_stacktrace = False
 			stacktrace_type = ''
 			stacktrace_key = 0
+			stacktrace_list = []
 			
 			for line in data['infolog.txt'].splitlines ():
 				if re.search ('^OS: ', line):
@@ -275,8 +274,9 @@ class Backend:
 						if (temp.has_key ('functionat')):
 							stacktrace.functionat = temp['functionat']
 						stacktrace.address = temp['address']
-						session.add( stacktrace )
-						session.commit()
+						stacktrace_list.append( stacktrace )
+			session.add_all( stacktrace_list )
+			session.commit()
 
 				
 			if (al_available_devices):
