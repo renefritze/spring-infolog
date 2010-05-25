@@ -1,4 +1,7 @@
 <?
+global $Global;
+$Global['BaseURL'] = $_SERVER['HTTP_HOST'];
+
 function DoxTime ()	{
 	$Time = microtime ();
 	return (strstr ($Time, " ") + str_replace (strstr ($Time, " "), " ", $Time));
