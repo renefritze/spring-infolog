@@ -2,20 +2,31 @@
 
 {% block content %}
 <TABLE>
-<TR><TH COLSPAN="2">Crash report details</TH></TR>
-<TR><TD>Buildserv command:</TD><TD>!translate file=http://infologs.zydox.se/?Infolog&NoHTML=1&ID={{ crash.id }}</TD></TR>
-<TR><TH CLASS="Sub" COLSPAN="2">Stacktrace</TH></TR>
-<TR><TD CLASS="NoPad" COLSPAN="2"><TABLE CELLSPACING="0" CELLPADDING="0">
-<COL WIDTH="20"><COL WIDTH="90"><COL WIDTH="330"><COL WIDTH="60"><COL WIDTH="100">
+	<TR><TH COLSPAN="2">Crash report details</TH></TR>
+	<TR><TD>Buildserv command:</TD><TD>!translate file=http://infologs.zydox.se/?Infolog&NoHTML=1&ID={{ crash.id }}</TD></TR>
+	<TR><TH CLASS="Sub" COLSPAN="2">Stacktrace</TH></TR>
+	<TR><TD CLASS="NoPad" COLSPAN="2">
+		<TABLE CELLSPACING="0" CELLPADDING="0">
+			<COL WIDTH="20"><COL WIDTH="90"><COL WIDTH="330"><COL WIDTH="60"><COL WIDTH="100">
 
-{% for row in crash.stacktrace %}
-	<TR>
-		<TD>{{ row.line }}</TD>
-		<TD>{{ row.file }}</TD>
-		<TD>{{ row.functionname }}</TD>
-		<TD>{{ row.functionat }}</TD>
-		<TD>{{ row.functionat }}</TD>
-	</TR>
-{% endfor %}
+			{% for row in crash.stacktrace %}
+				<TR>
+					<TD>{{ row.line }}</TD>
+					<TD>{{ row.file }}</TD>
+					<TD>{{ row.functionname }}</TD>
+					<TD>{{ row.functionat }}</TD>
+					<TD>{{ row.functionat }}</TD>
+				</TR>
+			{% endfor %}
+
+		</TABLE>
+	</TD></TR>
+	<TR><TH CLASS="Sub" COLSPAN="2">Extensions</TH></TR>
+	{% if crash.extensions  %}
+		{% for extension in crash.extensions.splitlines() %}		
+			<TR><TD>{{ extension }}</TD></TR>
+		{% endfor %}
+	{% endif %}
+</TABLE>
 
 {% endblock %}
