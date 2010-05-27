@@ -35,7 +35,7 @@ class Crash(Base):
 	lobby_client_version	= Column( String(64) )
 	contains_demo			= Column( Boolean, default=False )
 	
-	settings = relation( 'Settings', order_by='Settings.setting.desc' )
+	#settings = relation( 'Settings', order_by='Settings.setting.desc' )
 	stacktrace = relation( 'Stacktrace', order_by='Stacktrace.frame' )
 
 	def __init__(self):
