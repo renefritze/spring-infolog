@@ -57,8 +57,17 @@ class Status(Base):
 class Settings(Base):
 	__tablename__ 			= 'settings'
 	id 						= Column( Integer, ForeignKey( Crash.id ), primary_key=True )
-	setting					= Column( String(255), primary_key=True )
+	settingid				= Column( Integer )
+#	setting					= Column( String(255), primary_key=True )
+#	value					= Column( String(255) )
+
+
+class SettingsData(Base):
+	__tablename__ 			= 'settingsdata'
+	id 						= Column( Integer, primary_key=True )
+	setting					= Column( String(255) )
 	value					= Column( String(255) )
+#	UniqueConstraint('setting', 'value', name='setting_value_unique')
 
 
 class Stacktrace(Base):
@@ -305,10 +314,12 @@ class Backend:
 					if not set_settings.has_key (key):
 						settings = Settings()
 						settings.id = crash.id
-						settings.setting = x[:x.index ('=')]
-						settings.value = x[x.index ('=') + 1:]
+						settings.settingid = self.getSettingID (session, x[:x.index ('=')], x[x.index ('=') + 1:])
+#						settings.setting = x[:x.index ('=')]
+#						settings.value = x[x.index ('=') + 1:]
 						set_settings[key] = 1
 						settingslist.append( settings )
+#						settingid = self.getSettingID (session, x[:x.index ('=')], x[x.index ('=') + 1:])
 		
 		session.add_all( settingslist )
 		session.commit()
@@ -330,3 +341,17 @@ class Backend:
 			return (string.encode('utf8'))
 		except:
 			return ('ufc error')
+	
+	
+	def getSettingID (self, session, setting, value):
+		id = session.query( SettingsData.id ).filter( SettingsData.setting == setting ).filter(  SettingsData.value == value ).first()
+		try:
+			if session.query( SettingsData.id ).filter( and_ (SettingsData.setting == setting, SettingsData.value == value ) ).one():
+				return (id.id)
+		except:
+			settingsdata = SettingsData()
+			settingsdata.setting = setting
+			settingsdata.value = value
+			session.add( settingsdata )
+			session.commit()
+			return (settingsdata.id)
