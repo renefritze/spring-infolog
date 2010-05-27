@@ -35,7 +35,7 @@ class Crash(Base):
 	lobby_client_version	= Column( String(64) )
 	contains_demo			= Column( Boolean, default=False )
 	
-	settings = relation( 'Settings', order_by='Settings.setting.desc' )
+#	settings = relation( 'Settings', order_by='Settings.setting.desc' )
 	stacktrace = relation( 'Stacktrace', order_by='Stacktrace.frame' )
 
 	def __init__(self):
@@ -56,8 +56,8 @@ class Status(Base):
 
 class Settings(Base):
 	__tablename__ 			= 'settings'
-	id 						= Column( Integer, ForeignKey( Crash.id ), primary_key=True )
-	settingid				= Column( Integer )
+	reportid				= Column( Integer, ForeignKey( Crash.id ), primary_key=True )
+	settingid				= Column( Integer, primary_key=True )
 #	setting					= Column( String(255), primary_key=True )
 #	value					= Column( String(255) )
 
@@ -129,6 +129,8 @@ class Backend:
 		oldrev = self.GetDBRevision()
 		self.UpdateDBScheme( oldrev, current_db_rev )
 		self.SetDBRevision( current_db_rev )
+		self.getSettingIDCache = {}
+
 
 	def UpdateDBScheme( self, oldrev, current_db_rev ):
 		pass
@@ -313,7 +315,7 @@ class Backend:
 					key = x[:x.index ('=')].lower ()
 					if not set_settings.has_key (key):
 						settings = Settings()
-						settings.id = crash.id
+						settings.reportid = crash.id
 						settings.settingid = self.getSettingID (session, x[:x.index ('=')], x[x.index ('=') + 1:])
 #						settings.setting = x[:x.index ('=')]
 #						settings.value = x[x.index ('=') + 1:]
@@ -344,9 +346,16 @@ class Backend:
 	
 	
 	def getSettingID (self, session, setting, value):
+		if self.getSettingIDCache.has_key (setting):
+			if self.getSettingIDCache[setting].has_key (value):
+				return (self.getSettingIDCache[setting][value])
+		
 		id = session.query( SettingsData.id ).filter( SettingsData.setting == setting ).filter(  SettingsData.value == value ).first()
 		try:
 			if session.query( SettingsData.id ).filter( and_ (SettingsData.setting == setting, SettingsData.value == value ) ).one():
+				if not self.getSettingIDCache.has_key (setting):
+					self.getSettingIDCache[setting] = {}
+				self.getSettingIDCache[setting][value] = id.id
 				return (id.id)
 		except:
 			settingsdata = SettingsData()
