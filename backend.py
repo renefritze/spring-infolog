@@ -58,8 +58,6 @@ class Settings(Base):
 	__tablename__ 			= 'settings'
 	reportid				= Column( Integer, ForeignKey( Crash.id ), primary_key=True )
 	settingid				= Column( Integer, primary_key=True )
-#	setting					= Column( String(255), primary_key=True )
-#	value					= Column( String(255) )
 
 
 class SettingsData(Base):
@@ -67,7 +65,7 @@ class SettingsData(Base):
 	id 						= Column( Integer, primary_key=True )
 	setting					= Column( String(255) )
 	value					= Column( String(255) )
-#	UniqueConstraint('setting', 'value', name='setting_value_unique')
+	__table_args__  = UniqueConstraint(setting, value)
 
 
 class Stacktrace(Base):
@@ -317,15 +315,12 @@ class Backend:
 						settings = Settings()
 						settings.reportid = crash.id
 						settings.settingid = self.getSettingID (session, x[:x.index ('=')], x[x.index ('=') + 1:])
-#						settings.setting = x[:x.index ('=')]
-#						settings.value = x[x.index ('=') + 1:]
 						set_settings[key] = 1
 						settingslist.append( settings )
-#						settingid = self.getSettingID (session, x[:x.index ('=')], x[x.index ('=') + 1:])
 		
-		session.add_all( settingslist )
-		session.commit()
-
+			session.add_all( settingslist )
+			session.commit()
+		
 		session.close()
 		return crash_id
 	
