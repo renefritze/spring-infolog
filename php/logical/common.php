@@ -46,9 +46,9 @@ function GetStacktrace ($ID)	{
 function GetCrashes ()	{
 	$MySQL_Result = DB_Query ("SELECT COUNT(id) FROM records WHERE crashed='1'");
 	$Crashed = join ("", mysql_fetch_assoc ($MySQL_Result));
-	$MySQL_Result = DB_Query ("SELECT settingsdata.setting, settingsdata.value, COUNT(records.id) AS Crashes FROM records LEFT JOIN settings ON records.id=settings.reportid LEFT JOIN settingsdata on settings.settingid=settingsdata.id WHERE crashed='1' GROUP BY settings.settingid");
+	$MySQL_Result = DB_Query ("SELECT settingsdata.id, settingsdata.setting, settingsdata.value, COUNT(records.id) AS Crashes FROM records LEFT JOIN settings ON records.id=settings.reportid LEFT JOIN settingsdata on settings.settingid=settingsdata.id WHERE crashed='1' GROUP BY settings.settingid");
 	while ($Data = mysql_fetch_assoc ($MySQL_Result))
-		$Return['Settings'][$Data['setting']][$Data['value']] = array ("Reports" => $Data['Crashes'], "Percentage" => number_format ($Data['Crashes'] / $Crashed * 100, 1, ".", ""));
+		$Return['Settings'][$Data['setting']][$Data['value']] = array ("ID" => $Data['id'], "Reports" => $Data['Crashes'], "Percentage" => number_format ($Data['Crashes'] / $Crashed * 100, 1, ".", ""));
 	ksort ($Return['Settings']);
 	foreach (array_keys ($Return['Settings']) as $Setting)
 		ksort ($Return['Settings'][$Setting]);

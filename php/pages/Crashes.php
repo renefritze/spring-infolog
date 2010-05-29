@@ -21,7 +21,7 @@ foreach (array_keys ($Data['Settings']) as $Setting)	{
 			?>
 <TD CLASS="LineM<? echo ($iSettings % 2); ?>" ROWSPAN="<? echo count ($Data['Settings'][$Setting]); ?>"><? echo $Setting; ?></TD>
 <?		}	?>
-<TD CLASS="LineM<? echo ($iSettings % 2); ?>S<? echo ($iSettings2 % 2); ?>"><? echo $Value; ?></TD>
+<TD CLASS="LineM<? echo ($iSettings % 2); ?>S<? echo ($iSettings2 % 2); ?>"><A HREF="?List&Filter[]=crashed@1&Filter[]=settingid@<? echo $Data['Settings'][$Setting][$Value]['ID']; ?>"><? echo $Value; ?></A></TD>
 <TD CLASS="LineM<? echo ($iSettings % 2); ?>S<? echo ($iSettings2 % 2); ?>"><? echo $Data['Settings'][$Setting][$Value]['Reports']; ?></TD>
 <TD CLASS="LineM<? echo ($iSettings % 2); ?>S<? echo ($iSettings2 % 2); ?>"><? echo $Data['Settings'][$Setting][$Value]['Percentage']; ?>%</TD>
 </TR>
