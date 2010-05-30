@@ -87,6 +87,13 @@ class StacktraceData(Base):
 	address					= Column( String(10) )
 
 
+class Cache(Base):
+	__tablename__ 			= 'cache'
+	Field					= Column ( String(128), primary_key=True )
+	Data					= Column ( Text(200000) )
+	Updated					= Column ( Integer )
+	
+
 class DbConfig(Base):
 	__tablename__	= 'config'
 	dbrevision		= Column( Integer, primary_key=True )
