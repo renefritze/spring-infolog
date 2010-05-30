@@ -18,8 +18,11 @@ foreach (array_keys ($Data['Settings']) as $Setting)	{
 		?>
 <TR>
 <?		if (++$i[$Setting] == 1)	{
+			unset ($SettingIDs);
+			foreach ($Data['Settings'][$Setting] as $ValueData)
+				$SettingIDs[$ValueData['ID']] = $ValueData['ID'];
 			?>
-<TD CLASS="LineM<? echo ($iSettings % 2); ?>" ROWSPAN="<? echo count ($Data['Settings'][$Setting]); ?>"><? echo $Setting; ?></TD>
+<TD CLASS="LineM<? echo ($iSettings % 2); ?>" ROWSPAN="<? echo count ($Data['Settings'][$Setting]); ?>"><A HREF="?List&Filter[]=crashed@1&Filter[]=settingid@<? echo join ("&Filter[]=settingid@", $SettingIDs); ?>"><? echo $Setting; ?></A></TD>
 <?		}	?>
 <TD CLASS="LineM<? echo ($iSettings % 2); ?>S<? echo ($iSettings2 % 2); ?>"><A HREF="?List&Filter[]=crashed@1&Filter[]=settingid@<? echo $Data['Settings'][$Setting][$Value]['ID']; ?>"><? echo $Value; ?></A></TD>
 <TD CLASS="LineM<? echo ($iSettings % 2); ?>S<? echo ($iSettings2 % 2); ?>"><? echo $Data['Settings'][$Setting][$Value]['Reports']; ?></TD>

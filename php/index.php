@@ -1,5 +1,4 @@
 <?
-require ("site.config.php");
 require ("logical/common.php");
 $ScriptStartTime = DoxTime ();
 $Post = array_merge ($_POST, $_GET);

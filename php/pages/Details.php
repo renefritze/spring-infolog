@@ -1,6 +1,7 @@
 <?
 $Data = GetReport ($Post['ID']);
 $Stacktrace = GetStacktrace ($Post['ID']);
+$Extensions = GetExtensionMapping ();
 ?>
 <TABLE>
 <TR><TH COLSPAN="2">Crash report details</TH></TR>
@@ -27,8 +28,8 @@ if (is_array ($Stacktrace))	{	?>
 <TR><TH CLASS="Sub" COLSPAN="2">Extensions</TH></TR>
 <?
 if ($Data['extensions'])
-	foreach (explode ("\n", $Data['extensions']) as $Extension)	{	?>
-<TR><TD><? echo $Extension; ?></TD></TR>
+	foreach (explode ("\n", str_replace ("\r", "", $Data['extensions'])) as $Extension)	{	?>
+<TR><TD><? echo ($Extensions[$Extension] ? "<A HREF=\"" . $Extensions[$Extension] . "\">" : "") . $Extension . ($Extensions[$Extension] ? "</A>" : ""); ?></TD></TR>
 <?	}
 ?>
 </TABLE>

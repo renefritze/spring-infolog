@@ -8,12 +8,17 @@ if ($Post['Filter'])	{
 		}
 	}
 	if (is_array ($Filter['settingid']))	{
-		$Where[] = "settings.settingid='" . mysql_escape_string (key ($Filter['settingid'])) . "'";
-		$Join[] = "LEFT JOIN settings ON records.id=settings.reportid";
+		unset ($NewWhere);
+		foreach ($Filter['settingid'] as $ID)
+			$NewWhere[] = "settings.settingid='" . mysql_escape_string ($ID) . "'";
+		$Join['LEFT JOIN settings ON records.id=settings.reportid'] = "LEFT JOIN settings ON records.id=settings.reportid";
+		$Where[] = "(" . join (" OR ", $NewWhere) . ")";
 	}
-	if (is_array ($Filter['crashed']))
-		$Where[] = "records.crashed='" . mysql_escape_string (key ($Filter['crashed'])) . "'";
-	
+	if (is_array ($Filter['crashed']))	{
+		unset ($NewWhere);
+		$NewWhere[] = "records.crashed='" . mysql_escape_string (key ($Filter['crashed'])) . "'";
+		$Where[] = "(" . join (" OR ", $NewWhere) . ")";
+	}
 }
 $MySQL_Result = DB_Query ("SELECT id, date, gamemod FROM records" . ($Join ? " " . join (" ", $Join) : NULL) . ($Where ? " WHERE (" . join (") AND (", $Where) . ")" : NULL));
 ?>

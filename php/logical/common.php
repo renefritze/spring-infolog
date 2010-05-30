@@ -1,5 +1,6 @@
 <?
 global $Global;
+require ("site.config.php");
 $Global['BaseURL'] = $_SERVER['HTTP_HOST'] . dirname ($_SERVER['REQUEST_URI']);
 
 function DoxTime ()	{
@@ -68,5 +69,45 @@ function GetCrashes2 ()	{
 	foreach (array_keys ($Return['Settings']) as $Setting)
 		ksort ($Return['Settings'][$Setting]);
 	return ($Return);
+}
+
+
+function Download ($URL)	{
+	$TempFile = "/tmp/DL-" . uniqid ("");
+	exec ("/usr/bin/wget --quiet --timeout=30 --dns-timeout=30 --connect-timeout=30 --output-document=" . $TempFile . " \"" . $URL . "\"");
+	if (filesize ($TempFile) > 0)	{
+		$FP = fopen ($TempFile, "r");
+		$Data = fread ($FP, filesize ($TempFile));
+		fclose ($FP);
+		if (file_exists ($TempFile))	{
+			unlink ($TempFile);
+			return ($Data);
+		}
+	}	elseif (file_exists ($TempFile))	{
+		unlink ($TempFile);
+		sleep (5);
+		if ($Loop < 3)
+			return (Download ($URL, $Loop + 1));
+	}
+}
+
+
+function GetExtensionMapping ()	{
+	$MySQL_Result = DB_Query ("SELECT Data, Updated FROM cache WHERE Field='ExtensionMapping'");
+	$Data = mysql_fetch_assoc ($MySQL_Result);
+	if ($Data && $Data['Updated'] >= time () - 86400)	{	// Uses the cache table if available and results are less than one day old...
+		return (unserialize ($Data['Data']));
+	}	else	{
+		$URL = "http://www.opengl.org/registry/";
+		$Page = Download ($URL);
+		foreach (explode ("\n", $Page) as $Line)	{
+			if (strstr ($Line, "\">GL"))	{
+				$Line = substr (strstr ($Line, "<a href=\""), 9);
+				$Return[str_replace (array ("&amp;"), array ("&"), substr ($Line, strpos ($Line, "\">") + 2, -4))] = $URL . substr ($Line, 0, strpos ($Line, "\">"));
+			}
+		}
+		DB_Query ("REPLACE INTO cache SET Field='ExtensionMapping', Data='" . mysql_escape_string (serialize ($Return)) . "', Updated='" . time () . "'");
+		return ($Return);
+	}
 }
 ?>
