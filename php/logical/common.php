@@ -37,9 +37,9 @@ function GetSettings ($ID)	{
 
 
 function GetStacktrace ($ID)	{
-	$MySQL_Result = DB_Query ("SELECT * FROM stacktrace WHERE id='" . mysql_escape_string ($ID) . "'");
+	$MySQL_Result = DB_Query ("SELECT stacktrace.orderid, stacktrace.raw, stacktracedata.* FROM stacktrace LEFT JOIN stacktracedata ON stacktrace.stacktraceid=stacktracedata.id WHERE reportid='" . mysql_escape_string ($ID) . "'");
 	while ($Data = mysql_fetch_assoc ($MySQL_Result))
-		$Return[$Data['line']] = $Data;
+		$Return[$Data['orderid']] = $Data;
 	return ($Return);
 }
 
@@ -49,10 +49,10 @@ function GetCrashes ()	{
 	$Crashed = join ("", mysql_fetch_assoc ($MySQL_Result));
 	$MySQL_Result = DB_Query ("SELECT settingsdata.id, settingsdata.setting, settingsdata.value, COUNT(records.id) AS Crashes FROM records LEFT JOIN settings ON records.id=settings.reportid LEFT JOIN settingsdata on settings.settingid=settingsdata.id WHERE crashed='1' GROUP BY settings.settingid");
 	while ($Data = mysql_fetch_assoc ($MySQL_Result))
-		$Return['Settings'][$Data['setting']][$Data['value']] = array ("ID" => $Data['id'], "Reports" => $Data['Crashes'], "Percentage" => number_format ($Data['Crashes'] / $Crashed * 100, 1, ".", ""));
-	ksort ($Return['Settings']);
-	foreach (array_keys ($Return['Settings']) as $Setting)
-		ksort ($Return['Settings'][$Setting]);
+		$Return['Data'][$Data['setting']][$Data['value']] = array ("ID" => $Data['id'], "Reports" => $Data['Crashes'], "Percentage" => number_format ($Data['Crashes'] / $Crashed * 100, 1, ".", ""));
+	ksort ($Return['Data']);
+	foreach (array_keys ($Return['Data']) as $Setting)
+		ksort ($Return['Data'][$Setting]);
 	return ($Return);
 }
 
@@ -60,14 +60,15 @@ function GetCrashes ()	{
 function GetCrashes2 ()	{
 	$MySQL_Result = DB_Query ("SELECT COUNT(id) FROM records WHERE crashed='1'");
 	$Crashed = join ("", mysql_fetch_assoc ($MySQL_Result));
-	$MySQL_Result = DB_Query ("SELECT stacktrace.file, stacktrace.functionname, stacktrace.functionat, stacktrace.address, COUNT(records.id) AS Crashes FROM records LEFT JOIN stacktrace ON records.id=stacktrace.id WHERE crashed='1' GROUP BY stacktrace.file, stacktrace.functionname, stacktrace.functionat, stacktrace.address");
+	$MySQL_Result = DB_Query ("SELECT stacktracedata.*, COUNT(records.id) AS Crashes FROM records LEFT JOIN stacktrace ON records.id=stacktrace.reportid AND stacktrace.orderid='1' LEFT JOIN stacktracedata ON stacktrace.stacktraceid=stacktracedata.id WHERE crashed='1' GROUP BY stacktrace.stacktraceid");
 	while ($Data = mysql_fetch_assoc ($MySQL_Result))	{
-		$Return['Settings'][$Data['file']][$Data['address']]['Reports'] += $Data['Crashes'];
-		$Return['Settings'][$Data['file']][$Data['address']]['Percentage'] = number_format ($Return['Settings'][$Data['file']][$Data['address']]['Reports'] / $Crashed * 100, 1, ".", "");
+		$Return['Data'][$Data['file']][$Data['address']]['Reports'] += $Data['Crashes'];
+		$Return['Data'][$Data['file']][$Data['address']]['Percentage'] = number_format ($Return['Settings'][$Data['file']][$Data['address']]['Reports'] / $Crashed * 100, 1, ".", "");
+		$Return['Data'][$Data['file']][$Data['address']]['ID'] = $Data['id'];
 	}
-	ksort ($Return['Settings']);
-	foreach (array_keys ($Return['Settings']) as $Setting)
-		ksort ($Return['Settings'][$Setting]);
+	ksort ($Return['Data']);
+	foreach (array_keys ($Return['Data']) as $Setting)
+		ksort ($Return['Data'][$Setting]);
 	return ($Return);
 }
 

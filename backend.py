@@ -36,7 +36,7 @@ class Crash(Base):
 	contains_demo			= Column( Boolean, default=False )
 	
 #	settings = relation( 'Settings', order_by='Settings.setting.desc' )
-	stacktrace = relation( 'Stacktrace', order_by='Stacktrace.frame' )
+#	stacktrace = relation( 'Stacktrace', order_by='Stacktrace.frame' )
 
 	def __init__(self):
 		self.date = datetime.datetime.now()
@@ -70,16 +70,21 @@ class SettingsData(Base):
 
 class Stacktrace(Base):
 	__tablename__ 			= 'stacktrace'
-	id						= Column( Integer, ForeignKey( Crash.id ), primary_key=True )
-	stacktrace_id			= Column( Integer, primary_key=True )
-	frame					= Column( Integer )
+	reportid				= Column( Integer, ForeignKey( Crash.id ), primary_key=True )
+	orderid					= Column( Integer, primary_key=True )
+	stacktraceid			= Column( Integer )
 	type					= Column( String(10))
 	line					= Column( Integer )
+	raw						= Column( String(255) )
+
+
+class StacktraceData(Base):
+	__tablename__ 			= 'stacktracedata'
+	id						= Column( Integer, primary_key=True )
 	file					= Column( String(128) )
 	functionname			= Column( String(128) )
-	functionat				= Column( String(16) )
+	functionaddress			= Column( String(16) )
 	address					= Column( String(10) )
-	raw						= Column( String(255) )
 
 
 class DbConfig(Base):
@@ -128,7 +133,8 @@ class Backend:
 		self.UpdateDBScheme( oldrev, current_db_rev )
 		self.SetDBRevision( current_db_rev )
 		self.getSettingIDCache = {}
-
+		self.getStacktraceIDCache = {}
+	
 
 	def UpdateDBScheme( self, oldrev, current_db_rev ):
 		pass
@@ -261,7 +267,7 @@ class Backend:
 					elif (is_stacktrace and re.search ('^\[[ 0-9]*\] \([0-9]*\) ', line)):
 						stacktrace_id = stacktrace_id + 1
 						stacktrace_key = int (self.parseInfologSub ('^\[[ 0-9]*\]', line, 0)[1:-1])
-						temp = {}
+						temp = {'function':None, 'functionat':None}
 						value = self.parseInfologSub ('^\[[ 0-9]*\] ', line)
 						value = value.split (' ')
 						temp['line'] = value[0][1:-1]
@@ -275,19 +281,42 @@ class Backend:
 						temp['file'] = temp['file'][max (temp['file'].rfind ('\\'), temp['file'].rfind ('/')) + 1:]
 						
 						stacktrace = Stacktrace()
-						stacktrace.id = crash.id
-						stacktrace.stacktrace_id = stacktrace_id
-						stacktrace.frame = stacktrace_key
+						stacktrace.reportid = crash.id
+						stacktrace.orderid = stacktrace_id
+						stacktrace.stacktraceid = self.getStacktraceID (session, temp['file'], temp['address'], temp['function'], temp['functionat'])
 						stacktrace.type = stacktrace_type
-						stacktrace.raw = self.dbEncode (line)
 						stacktrace.line = int (temp['line'])
-						stacktrace.file = temp['file']
-						if (temp.has_key ('function')):
-							stacktrace.functionname = temp['function']
-						if (temp.has_key ('functionat')):
-							stacktrace.functionat = temp['functionat']
-						stacktrace.address = temp['address']
+						stacktrace.raw = line
 						stacktracelist.append ( stacktrace )
+
+#						stacktrace_id = stacktrace_id + 1
+#						stacktrace_key = int (self.parseInfologSub ('^\[[ 0-9]*\]', line, 0)[1:-1])
+#						temp = {}
+#						value = self.parseInfologSub ('^\[[ 0-9]*\] ', line)
+#						value = value.split (' ')
+#						temp['line'] = value[0][1:-1]
+#						temp['address'] = value[len (value) - 1][1:-1]
+#						if (value[len (value) - 2][-1] == ')'):
+#							temp['file'] = value[len (value) - 2][:value[len (value) - 2].rfind ('(')]
+#							temp['function'] = value[len (value) - 2][value[len (value) - 2].rfind ('(') + 1:value[len (value) - 2].rfind ('+')]
+#							temp['functionat'] = value[len (value) - 2][value[len (value) - 2].rfind ('+') + 1:-1]
+#						else:
+#							temp['file'] = value[len (value) - 2]
+#						temp['file'] = temp['file'][max (temp['file'].rfind ('\\'), temp['file'].rfind ('/')) + 1:]
+#						
+#						stacktrace = Stacktrace()
+#						stacktrace.id = crash.id
+#						stacktrace.stacktrace_id = stacktrace_id
+#						stacktrace.frame = stacktrace_key
+#						stacktrace.type = stacktrace_type
+#						stacktrace.raw = self.dbEncode (line)
+#						stacktrace.line = int (temp['line'])
+#						stacktrace.file = temp['file']
+#						if (temp.has_key ('function')):
+#							stacktrace.functionname = temp['function']
+#						if (temp.has_key ('functionat')):
+#							stacktrace.functionat = temp['functionat']
+#						stacktrace.address = temp['address']
 				
 			if (al_available_devices):
 				crash.al_available_devices = self.dbEncode ("\n".join (al_available_devices))
@@ -359,3 +388,33 @@ class Backend:
 			session.add( settingsdata )
 			session.commit()
 			return (settingsdata.id)
+
+
+	def getStacktraceID (self, session, file, address, functionname, functionaddress):
+		if self.getStacktraceIDCache.has_key (file):
+			if self.getStacktraceIDCache[file].has_key (address):
+				if self.getStacktraceIDCache[file][address].has_key (functionname):
+					if self.getStacktraceIDCache[file][address][functionname].has_key (functionaddress):
+						return (self.getStacktraceIDCache[file][address][functionname][functionaddress])
+					
+		
+		id = session.query( StacktraceData.id ).filter( StacktraceData.file == file ).filter( StacktraceData.address == address ).filter ( StacktraceData.functionname == functionname ).filter ( StacktraceData.functionaddress == functionaddress ).first()
+		try:
+			if session.query( StacktraceData.id ).filter( and_ (StacktraceData.file == file, StacktraceData.address == address, StacktraceData.functionname == functionname, StacktraceData.functionaddress == functionaddress ) ).one():
+				if not self.getStacktraceIDCache.has_key (file):
+					self.getStacktraceIDCache[file] = {}
+				if not self.getStacktraceIDCache[file].has_key (address):
+					self.getStacktraceIDCache[file][address] = {}
+				if not self.getStacktraceIDCache[file][address].has_key (functionname):
+					self.getStacktraceIDCache[file][address][functionname] = {}
+				self.getStacktraceIDCache[file][address][functionname][functionaddress] = id.id
+				return (id.id)
+		except:
+			stacktracedata = StacktraceData()
+			stacktracedata.file = file
+			stacktracedata.address = address
+			stacktracedata.functionname = functionname
+			stacktracedata.functionaddress = functionaddress
+			session.add( stacktracedata )
+			session.commit()
+			return (stacktracedata.id)

@@ -14,7 +14,7 @@ if (is_array ($Stacktrace))	{	?>
 <?	foreach ($Stacktrace as $Row)	{
 		?>
 <TR>
-<TD><? echo $Row['line']; ?></TD>
+<TD><? echo $Row['orderid']; ?></TD>
 <TD><? echo $Row['file']; ?></TD>
 <TD><? echo $Row['functionname']; ?></TD>
 <TD><? echo $Row['functionat']; ?></TD>
