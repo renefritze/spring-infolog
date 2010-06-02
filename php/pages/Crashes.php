@@ -23,9 +23,9 @@ foreach (array_keys ($Data['Data']) as $Setting)	{
 			foreach ($Data['Data'][$Setting] as $ValueData)
 				$SettingIDs[$ValueData['ID']] = $ValueData['ID'];
 			?>
-<TD CLASS="LineM<? echo ($iSettings % 2); ?>" ROWSPAN="<? echo count ($Data['Data'][$Setting]); ?>"><A HREF="?List&Filter[]=crashed@1&Filter[]=<? echo $FilterType; ?>@<? echo join ("&Filter[]=" . $FilterType . "@", $SettingIDs); ?>"><? echo $Setting; ?></A></TD>
+<TD CLASS="LineM<? echo ($iSettings % 2); ?>" ROWSPAN="<? echo count ($Data['Data'][$Setting]); ?>"><A HREF="?List&Filter[]=index@crashed@1&Filter[]=<? echo $FilterType; ?>@<? echo $Setting; ?>@<? echo join ("&Filter[]=" . $FilterType . "@" . $Setting . "@", $SettingIDs); ?>"><? echo $Setting; ?></A></TD>
 <?		}	?>
-<TD CLASS="LineM<? echo ($iSettings % 2); ?>S<? echo ($iSettings2 % 2); ?>"><A HREF="?List&Filter[]=crashed@1&Filter[]=<? echo $FilterType; ?>@<? echo $Data['Data'][$Setting][$Value]['ID']; ?>"><? echo $Value; ?></A></TD>
+<TD CLASS="LineM<? echo ($iSettings % 2); ?>S<? echo ($iSettings2 % 2); ?>"><A HREF="?List&Filter[]=index@crashed@1&Filter[]=<? echo $FilterType; ?>@<? echo $Setting; ?>@<? echo $Data['Data'][$Setting][$Value]['ID']; ?>"><? echo $Value; ?></A></TD>
 <TD CLASS="LineM<? echo ($iSettings % 2); ?>S<? echo ($iSettings2 % 2); ?>"><? echo $Data['Data'][$Setting][$Value]['Reports']; ?></TD>
 <TD CLASS="LineM<? echo ($iSettings % 2); ?>S<? echo ($iSettings2 % 2); ?>"><? echo $Data['Data'][$Setting][$Value]['Percentage']; ?>%</TD>
 </TR>
