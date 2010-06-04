@@ -9,30 +9,30 @@ Base = declarative_base()
 
 class Crash(Base):
 	__tablename__ 			= 'records'
-	id 						= Column( Integer, primary_key=True )
-	date 					= Column( DateTime )
-	extensions				= Column( Text )
-	script					= Column( Text )
+	id						= Column( Integer, primary_key=True )
+	date					= Column( DateTime )
 	filename				= Column( String(255) )
-	platform				= Column( String(255) )
-	spring					= Column( String(100) )
-	map						= Column( String(100) )
-	gamemod					= Column( String(100) )
-	gameid					= Column( String(32) )
-	sdl_version				= Column( String(100) )
-	glew_version			= Column( String(100) )
-	al_vendor				= Column( String(100) )
-	al_version				= Column( String(100) )
-	al_renderer				= Column( String(100) )
-	al_extensions			= Column( Text )
-	alc_extensions			= Column( String(255) )
-	al_device				= Column( String(100) )
-	al_available_devices	= Column( Text )
-	gl_version				= Column( String(100) )
-	gl_vendor				= Column( String(100) )
-	gl_renderer				= Column( String(100) )
+	script					= Column( Text )
+	extensionsid			= Column( Integer )
+	platformid				= Column( Integer )
+	springid				= Column( Integer )
+	mapid					= Column( Integer )
+	gamemodid				= Column( Integer )
+	gameidid				= Column( Integer )
+	sdl_versionid			= Column( Integer )
+	glew_versionid			= Column( Integer )
+	al_vendorid				= Column( Integer )
+	al_versionid			= Column( Integer )
+	al_rendererid			= Column( Integer )
+	al_extensionsid			= Column( Integer )
+	alc_extensionsid		= Column( Integer )
+	al_deviceid				= Column( Integer )
+	al_available_devicesid	= Column( Integer )
+	gl_versionid			= Column( Integer )
+	gl_vendorid				= Column( Integer )
+	gl_rendererid			= Column( Integer )
+	lobby_client_versionid	= Column( Integer )
 	crashed					= Column( Boolean, default=False )
-	lobby_client_version	= Column( String(64) )
 	contains_demo			= Column( Boolean, default=False )
 	
 #	settings = relation( 'Settings', order_by='Settings.setting.desc' )
@@ -48,24 +48,32 @@ class Crash(Base):
 	def id_link(self):
 		return genshi.XML('<a href="/details?id=%s">%s</a>' % (self.id, str(self.date)))
 
+
+class RecordsData(Base):
+	__tablename__ 			= 'recordsdata'
+	id						= Column( Integer, primary_key=True )
+	field					= Column( Enum ('extensions', 'platform', 'spring', 'map', 'gamemod', 'gameid' ,'sdl_version' ,'glew_version' ,'al_vendor' ,'al_version' ,'al_renderer' ,'al_extensions' ,'alc_extensions' ,'al_device' ,'al_available_devices' ,'gl_version' ,'gl_vendor' ,'gl_renderer' ,'lobby_client_version') )
+	data					= Column( Text )
+
+
 class Status(Base):
-	__tablename__	= 'status'
-	internal_name	= Column( String(20), primary_key=True )
-	display_name	= Column( String(60) )
+	__tablename__			= 'status'
+	internal_name			= Column( String(20), primary_key=True )
+	display_name			= Column( String(60) )
 
 
 class Settings(Base):
 	__tablename__ 			= 'settings'
 	reportid				= Column( Integer, ForeignKey( Crash.id ), primary_key=True )
 	settingid				= Column( Integer, primary_key=True )
+	valueid					= Column (Integer )
 
 
 class SettingsData(Base):
 	__tablename__ 			= 'settingsdata'
-	id 						= Column( Integer, primary_key=True )
-	setting					= Column( String(255) )
-	value					= Column( String(255) )
-	__table_args__  = UniqueConstraint(setting, value)
+	id						= Column( Integer, primary_key=True )
+	type					= Column( Enum ('setting', 'value') )
+	data					= Column( String(255) )
 
 
 class Stacktrace(Base):
@@ -95,8 +103,8 @@ class Cache(Base):
 	
 
 class DbConfig(Base):
-	__tablename__	= 'config'
-	dbrevision		= Column( Integer, primary_key=True )
+	__tablename__			= 'config'
+	dbrevision				= Column( Integer, primary_key=True )
 
 	def __init__(self):
 		self.dbrevision = 1
@@ -141,6 +149,7 @@ class Backend:
 		self.SetDBRevision( current_db_rev )
 		self.getSettingIDCache = {}
 		self.getStacktraceIDCache = {}
+		self.getRecordDataIDCache = {}
 	
 
 	def UpdateDBScheme( self, oldrev, current_db_rev ):
@@ -180,7 +189,7 @@ class Backend:
 			crash.date = datetime.datetime (date_time[0], date_time[1], date_time[2], date_time[3], date_time[4], date_time[5])
 		
 		if data.has_key( 'ext.txt' ):
-			crash.extensions = self.dbEncode (data['ext.txt'])
+			crash.extensionsid = self.getRecordDataID (session, 'extensions', data['ext.txt'])
 		if data.has_key( 'script.txt' ):
 			crash.script = self.dbEncode (data['script.txt'])
 		crash.status = None
@@ -188,7 +197,8 @@ class Backend:
 		if data.has_key ('client.txt'):
 			temp = data['client.txt'].splitlines()
 			if temp[0]:
-				crash.lobby_client_version = self.dbEncode (temp[0])
+				crash.lobby_client_versionid = self.getRecordDataID (session, 'lobby_client_version', temp[0])
+
 		if data.has_key ('demo.sdf'):
 			crash.contains_demo = True
 		
@@ -210,54 +220,54 @@ class Backend:
 				elif (re.search ('^\[[ 0]*\]', line)):
 					value = self.parseInfologSub ('^\[[ 0]*\] Using map[ ]*', line)
 					if (value):
-						crash.map = self.dbEncode (value)
-					if (not crash.gamemod):
+						crash.mapid = self.getRecordDataID (session, 'map', value)
+					if (not crash.gamemodid):
 						value = self.parseInfologSub ('^\[[ 0]*\] Using mod[ ]*', line)
 						if (value):
-							crash.gamemod = self.dbEncode (value)
+							crash.gamemodid = self.getRecordDataID (session, 'gamemod', value)
 					value = self.parseInfologSub ('^\[[ 0]*\] GameID:[ ]*', line)
 					if (value):
-						crash.gameid = self.dbEncode (value)
+						crash.gameidid = self.getRecordDataID (session, 'gameid', value)
 					value = self.parseInfologSub ('^\[[ 0]*\] SDL:[ ]*', line)
 					if (value):
-						crash.sdl_version = self.dbEncode (value)
+						crash.sdl_versionid = self.getRecordDataID (session, 'sdl_version', value)
 					value = self.parseInfologSub ('^\[[ 0]*\] GLEW:[ ]*', line)
 					if (value):
-						crash.glew_version = self.dbEncode (value)
+						crash.glew_versionid = self.getRecordDataID (session, 'glew_version', value)
 					value = self.parseInfologSub ('^\[[ 0]*\] Sound:[ ]*Vendor:[ ]*', line)
 					if (value):
-						crash.al_vendor = self.dbEncode (value)
+						crash.al_vendorid = self.getRecordDataID (session, 'al_vendor', value)
 					value = self.parseInfologSub ('^\[[ 0]*\] Sound:[ ]*Version:[ ]*', line)
 					if (value):
-						crash.al_version = self.dbEncode (value)
+						crash.al_versionid = self.getRecordDataID (session, 'al_version', value)
 					value = self.parseInfologSub ('^\[[ 0]*\] Sound:[ ]*Renderer:[ ]*', line)
 					if (value):
-						crash.al_renderer = self.dbEncode (value)
+						crash.al_rendererid = self.getRecordDataID (session, 'al_renderer', value)
 					value = self.parseInfologSub ('^\[[ 0]*\] Sound:[ ]*AL Extensions:[ ]*', line)
 					if (value):
-						crash.al_extensions = self.dbEncode (value)
+						crash.al_extensionsid = self.getRecordDataID (session, 'al_extensions', value)
 					value = self.parseInfologSub ('^\[[ 0]*\] Sound:[ ]*ALC Extensions:[ ]*', line)
 					if (value):
-						crash.alc_extensions = self.dbEncode (value)
+						crash.alc_extensionsid = self.getRecordDataID (session, 'alc_extensions', value)
 					value = self.parseInfologSub ('^\[[ 0]*\] Sound:[ ]*Device:[ ]*', line)
 					if (value):
-						crash.al_device = self.dbEncode (value)
+						crash.al_deviceid = self.getRecordDataID (session, 'al_device', value)
 					value = self.parseInfologSub ('^\[[ 0]*\] Sound:[ ]{23}', line)
 					if (value):
 						al_available_devices.append (value)
 					value = self.parseInfologSub ('^\[[ 0]*\] GL:[ ]*', line)
 					if (value):
-						if (not crash.gl_version):
-							crash.gl_version = self.dbEncode (value)
-						elif (not crash.gl_vendor):
-							crash.gl_vendor = self.dbEncode (value)
-						elif (not crash.gl_renderer):
-							crash.gl_renderer = self.dbEncode (value)
-				elif (not crash.spring):
+						if (not crash.gl_versionid):
+							crash.gl_versionid = self.getRecordDataID (session, 'gl_version', value)
+						elif (not crash.gl_vendorid):
+							crash.gl_vendorid = self.getRecordDataID (session, 'gl_vendor', value)
+						elif (not crash.gl_rendererid):
+							crash.gl_rendererid = self.getRecordDataID (session, 'gl_renderer', value)
+				elif (not crash.springid):
 					match = re.search ('^Spring(/d*\.)*', line)
 					if (match):
-						crash.spring = self.dbEncode (line)
-				elif (crash.spring):
+						crash.springid = self.getRecordDataID (session, 'spring', line)
+				elif (crash.springid):
 					match = re.search ('^\[[ 0-9]*\] Spring( /d*\.)*.*has crashed.$', line)
 					if (match):
 						crash.crashed = True
@@ -295,44 +305,15 @@ class Backend:
 						stacktrace.line = int (temp['line'])
 						stacktrace.raw = line
 						stacktracelist.append ( stacktrace )
-
-#						stacktrace_id = stacktrace_id + 1
-#						stacktrace_key = int (self.parseInfologSub ('^\[[ 0-9]*\]', line, 0)[1:-1])
-#						temp = {}
-#						value = self.parseInfologSub ('^\[[ 0-9]*\] ', line)
-#						value = value.split (' ')
-#						temp['line'] = value[0][1:-1]
-#						temp['address'] = value[len (value) - 1][1:-1]
-#						if (value[len (value) - 2][-1] == ')'):
-#							temp['file'] = value[len (value) - 2][:value[len (value) - 2].rfind ('(')]
-#							temp['function'] = value[len (value) - 2][value[len (value) - 2].rfind ('(') + 1:value[len (value) - 2].rfind ('+')]
-#							temp['functionat'] = value[len (value) - 2][value[len (value) - 2].rfind ('+') + 1:-1]
-#						else:
-#							temp['file'] = value[len (value) - 2]
-#						temp['file'] = temp['file'][max (temp['file'].rfind ('\\'), temp['file'].rfind ('/')) + 1:]
-#						
-#						stacktrace = Stacktrace()
-#						stacktrace.id = crash.id
-#						stacktrace.stacktrace_id = stacktrace_id
-#						stacktrace.frame = stacktrace_key
-#						stacktrace.type = stacktrace_type
-#						stacktrace.raw = self.dbEncode (line)
-#						stacktrace.line = int (temp['line'])
-#						stacktrace.file = temp['file']
-#						if (temp.has_key ('function')):
-#							stacktrace.functionname = temp['function']
-#						if (temp.has_key ('functionat')):
-#							stacktrace.functionat = temp['functionat']
-#						stacktrace.address = temp['address']
-				
+			
 			if (al_available_devices):
-				crash.al_available_devices = self.dbEncode ("\n".join (al_available_devices))
+				crash.al_available_devicesid = self.getRecordDataID (session, 'al_available_devices', "\n".join (al_available_devices))
 			if platform and not re.search ('^Linux', platform[0]):
-				crash.platform = self.dbEncode (' '.join (platform))
+				crash.platformid = self.getRecordDataID (session, 'platform', ' '.join (platform))
 			elif not data.has_key( 'platform.txt' ):
-				crash.platform = self.dbEncode (' '.join (platform))
+				crash.platformid = self.getRecordDataID (session, 'platform', ' '.join (platform))
 			else:
-				crash.platform = self.dbEncode (data['platform.txt'].strip ())
+				crash.platformid = self.getRecordDataID (session, 'platform', data['platform.txt'].strip ())
 		
 			if len (stacktracelist) > 0:
 				session.add_all( stacktracelist )
@@ -350,7 +331,8 @@ class Backend:
 					if not set_settings.has_key (key):
 						settings = Settings()
 						settings.reportid = crash.id
-						settings.settingid = self.getSettingID (session, x[:x.index ('=')], x[x.index ('=') + 1:])
+						settings.settingid = self.getSettingID (session, 'setting', x[:x.index ('=')])
+						settings.valueid = self.getSettingID (session, 'value', x[x.index ('=') + 1:])
 						set_settings[key] = 1
 						settingslist.append( settings )
 		
@@ -376,22 +358,22 @@ class Backend:
 			return ('ufc error')
 	
 	
-	def getSettingID (self, session, setting, value):
-		if self.getSettingIDCache.has_key (setting):
-			if self.getSettingIDCache[setting].has_key (value):
-				return (self.getSettingIDCache[setting][value])
+	def getSettingID (self, session, type, data):
+		if self.getSettingIDCache.has_key (type):
+			if self.getSettingIDCache[type].has_key (data):
+				return (self.getSettingIDCache[type][data])
 		
-		id = session.query( SettingsData.id ).filter( SettingsData.setting == setting ).filter(  SettingsData.value == value ).first()
+		id = session.query( SettingsData.id ).filter( SettingsData.type == type ).filter(  SettingsData.data == data ).first()
 		try:
-			if session.query( SettingsData.id ).filter( and_ (SettingsData.setting == setting, SettingsData.value == value ) ).one():
-				if not self.getSettingIDCache.has_key (setting):
-					self.getSettingIDCache[setting] = {}
-				self.getSettingIDCache[setting][value] = id.id
+			if session.query( SettingsData.id ).filter( and_ (SettingsData.type == type, SettingsData.data == data ) ).one():
+				if not self.getSettingIDCache.has_key (type):
+					self.getSettingIDCache[type] = {}
+				self.getSettingIDCache[type][data] = id.id
 				return (id.id)
 		except:
 			settingsdata = SettingsData()
-			settingsdata.setting = setting
-			settingsdata.value = value
+			settingsdata.type = type
+			settingsdata.data = data
 			session.add( settingsdata )
 			session.commit()
 			return (settingsdata.id)
@@ -425,3 +407,28 @@ class Backend:
 			session.add( stacktracedata )
 			session.commit()
 			return (stacktracedata.id)
+
+
+	def getRecordDataID (self, session, field, data):
+		field = self.dbEncode (field)
+		data = self.dbEncode (data).strip ()
+		if not data:
+			return (None)
+		if self.getRecordDataIDCache.has_key (field):
+			if self.getRecordDataIDCache[field].has_key (data):
+				return (self.getRecordDataIDCache[field][data])
+		
+		id = session.query( RecordsData.id ).filter( RecordsData.field == field ).filter( RecordsData.data == data ).first()
+		try:
+			if session.query( RecordsData.id ).filter( and_ (RecordsData.field == field, RecordsData.data == data ) ).one():
+				if not self.getRecordDataIDCache.has_key (field):
+					self.getRecordDataIDCache[field] = {}
+				self.getRecordDataIDCache[field][data] = id.id
+				return (id.id)
+		except:
+			recordsdata = RecordsData()
+			recordsdata.field = field
+			recordsdata.data = data
+			session.add( recordsdata )
+			session.commit()
+			return (recordsdata.id)

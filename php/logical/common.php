@@ -24,6 +24,23 @@ function DB_Query ($Query)	{
 function GetReport ($ID)	{
 	$MySQL_Result = DB_Query ("SELECT * FROM records WHERE id='" . mysql_escape_string ($ID) . "'");
 	$Return = mysql_fetch_assoc ($MySQL_Result);
+	foreach (array_keys ($Return) as $Key)
+		if (substr ($Key, -2) == "id" && $Key != "id" && $Return[$Key])
+			$KeyID[substr ($Key, 0, -2)] = $Return[$Key];
+	$MySQL_Result = DB_Query ("SELECT field, data FROM recordsdata WHERE ID='" . join ("' OR ID='", $KeyID) . "'");
+	while ($Data = mysql_fetch_assoc ($MySQL_Result))
+		$Return[$Data['field']] = $Data['data'];
+	return ($Return);
+}
+
+
+function GetSettingsList ($ID = NULL)	{
+	$MySQL_Result = DB_Query ("SELECT id, data FROM settingsdata WHERE type='setting'");
+	while ($Data = mysql_fetch_assoc ($MySQL_Result))
+		$Return[$Data['id']] = $Data['data'];
+	asort ($Return);
+	if ($ID)
+		return ($Return[$ID]);
 	return ($Return);
 }
 
@@ -47,9 +64,18 @@ function GetStacktrace ($ID)	{
 function GetCrashes ()	{
 	$MySQL_Result = DB_Query ("SELECT COUNT(id) FROM records WHERE crashed='1'");
 	$Crashed = join ("", mysql_fetch_assoc ($MySQL_Result));
-	$MySQL_Result = DB_Query ("SELECT settingsdata.id, settingsdata.setting, settingsdata.value, COUNT(records.id) AS Crashes FROM records LEFT JOIN settings ON records.id=settings.reportid LEFT JOIN settingsdata on settings.settingid=settingsdata.id WHERE crashed='1' GROUP BY settings.settingid");
-	while ($Data = mysql_fetch_assoc ($MySQL_Result))
-		$Return['Data'][$Data['setting']][$Data['value']] = array ("ID" => $Data['id'], "Reports" => $Data['Crashes'], "Percentage" => number_format ($Data['Crashes'] / $Crashed * 100, 1, ".", ""));
+	$MySQL_Result = DB_Query ("SELECT Data.id as settingid, Data.data AS setting, Value.id as valueid, Value.data AS value, COUNT(records.id) AS Crashes
+FROM records 
+LEFT JOIN settings ON records.id=settings.reportid
+LEFT JOIN settingsdata AS Data on settings.settingid=Data.id
+LEFT JOIN settingsdata AS Value on settings.valueid=Value.id
+WHERE records.crashed='1'
+GROUP BY settings.settingid, settings.valueid");
+	while ($Data = mysql_fetch_assoc ($MySQL_Result))	{
+		$Return['Data'][$Data['settingid']][$Data['valueid']] = array ("ID" => $Data['valueid'], "Reports" => $Data['Crashes'], "Percentage" => number_format ($Data['Crashes'] / $Crashed * 100, 1, ".", ""));
+		$Return['Index']['Settings'][$Data['settingid']] = $Data['setting'];
+		$Return['Index']['Values'][$Data['valueid']] = $Data['value'];
+	}
 	ksort ($Return['Data']);
 	foreach (array_keys ($Return['Data']) as $Setting)
 		ksort ($Return['Data'][$Setting]);

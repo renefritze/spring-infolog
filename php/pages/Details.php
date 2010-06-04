@@ -5,7 +5,8 @@ $Extensions = GetExtensionMapping ();
 ?>
 <TABLE>
 <TR><TH COLSPAN="2">Crash report details</TH></TR>
-<TR><TD>Buildserv command:</TD><TD>!translate file=http://<? echo $Global['BaseURL']; ?>/?Infolog&NoHTML=1&ID=<? echo $Post['ID']; ?></TD></TR>
+<TR><TD>File</TD><TD><A HREF="?DownloadFile&NoHTML=1&File=<? echo $Data['filename']; ?>">Download</A></TD></TR>
+<TR><TD>Buildserv command:</TD><TD>!translate file=http://<? echo $Global['BaseURL'] . (substr ($Global['BaseURL'], -1) != "/" ? "/" : ""); ?>?Infolog&NoHTML=1&ID=<? echo $Post['ID']; ?></TD></TR>
 <?
 if (is_array ($Stacktrace))	{	?>
 <TR><TH CLASS="Sub" COLSPAN="2">Stacktrace</TH></TR>
@@ -25,6 +26,14 @@ if (is_array ($Stacktrace))	{	?>
 <?
 }
 ?>
+<TR><TH CLASS="Sub" COLSPAN="2">Data</TH></TR>
+<?
+foreach (array ("spring", "platform", "map", "gamemod", "gameid", "sdl_version", "glew_version", "al_vendor", "al_version", "al_renderer", "al_extensions", "alc_extensions", "al_device", "al_available_devices", "gl_version", "gl_vendor", "gl_renderer", "lobby_client_version") as $Field)	{	?>
+<TR><TD><? echo $Field; ?></TD><TD><? echo $Data[$Field]; ?></TD></TR>
+<?
+}
+?>
+
 <TR><TH CLASS="Sub" COLSPAN="2">Extensions</TH></TR>
 <?
 if ($Data['extensions'])

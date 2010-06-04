@@ -1,5 +1,5 @@
 <?
-$MySQL_Result = DB_Query ("SELECT COUNT(id) AS Reports, crashed, lobby_client_version, contains_demo FROM records GROUP BY crashed, lobby_client_version, contains_demo");
+$MySQL_Result = DB_Query ("SELECT COUNT(records.id) AS Reports, records.crashed, records.contains_demo, recordsdata.data as lobby_client_version FROM records LEFT JOIN recordsdata ON records.lobby_client_versionid=recordsdata.id AND recordsdata.field='lobby_client_version' GROUP BY records.crashed, records.lobby_client_versionid, records.contains_demo");
 while ($Data = mysql_fetch_assoc ($MySQL_Result))	{
 	$Return['Reports']['Total'] += $Data['Reports'];
 	$Return['Reports']['Crashed'][$Data['crashed']] += $Data['Reports'];
