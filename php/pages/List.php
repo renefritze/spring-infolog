@@ -39,8 +39,14 @@ if ($Post['Filter'])	{
 		foreach (array_keys ($Filter['settingid']) as $Setting)	{
 			if (is_array ($Filter['settingid'][$Setting]))	{
 				foreach ($Filter['settingid'][$Setting] as $ID)
-					if ($ID || is_numeric ($ID))
-						$NewWhere[$Setting][] = ZydHash ($Setting, "Table", GetSettingsList ($Setting)) . ".valueid='" . mysql_escape_string ($ID) . "'";
+					if ($ID || is_numeric ($ID))	{
+						if (substr ($ID, 0, 6) == "REGEX_")	{
+							if (substr ($ID, 6))
+								$NewWhere[$Setting][] = ZydHash ($Setting, "SubTable", GetSettingsList ($Setting)) . ".data REGEXP '" . mysql_escape_string (substr ($ID, 6)) . "'";
+						}	else	{
+							$NewWhere[$Setting][] = ZydHash ($Setting, "Table", GetSettingsList ($Setting)) . ".valueid='" . mysql_escape_string ($ID) . "'";
+						}
+					}
 				if (is_array ($NewWhere[$Setting]))	{
 					$NewWhere[$Setting] = "(" . join (" OR ", $NewWhere[$Setting]) . ")";
 					$Join[ZydHash ($Setting, "Table")] = "LEFT JOIN settings AS " . ZydHash ($Setting, "Table") . " ON records.id=" . ZydHash ($Setting, "Table") . ".reportid AND " . ZydHash ($Setting, "Table") . ".settingid='" . mysql_escape_string ($Setting) . "'";
@@ -63,8 +69,14 @@ if ($Post['Filter'])	{
 		foreach (array_keys ($Filter['index']) as $Setting)	{
 			if (is_array ($Filter['index'][$Setting]))	{
 				foreach ($Filter['index'][$Setting] as $ID)
-					if ($ID || is_numeric ($ID))
-						$NewWhere[$Setting][] = "records." . mysql_escape_string ($Setting) . "='" . mysql_escape_string ($ID) . "'";
+					if ($ID || is_numeric ($ID))	{
+						if (substr ($ID, 0, 6) == "REGEX_")	{
+							if (substr ($ID, 6))
+								$NewWhere[$Setting][] = "records." . mysql_escape_string ($Setting) . " REGEXP '" . mysql_escape_string (substr ($ID, 6)) . "'";
+						}	else	{
+							$NewWhere[$Setting][] = "records." . mysql_escape_string ($Setting) . "='" . mysql_escape_string ($ID) . "'";
+						}
+					}
 				if (is_array ($NewWhere[$Setting]))
 					$NewWhere[$Setting] = "(" . join (" OR ", $NewWhere[$Setting]) . ")";
 			}
@@ -77,8 +89,14 @@ if ($Post['Filter'])	{
 		foreach (array_keys ($Filter['indexid']) as $Setting)	{
 			if (is_array ($Filter['indexid'][$Setting]))	{
 				foreach ($Filter['indexid'][$Setting] as $ID)
-					if ($ID || is_numeric ($ID))
-						$NewWhere[$Setting][] = "records." . mysql_escape_string ($Setting) . "id='" . mysql_escape_string ($ID) . "'";
+					if ($ID || is_numeric ($ID))	{
+						if (substr ($ID, 0, 6) == "REGEX_")	{
+							if (substr ($ID, 6))
+								$NewWhere[$Setting][] = ZydHash ($Setting, "Table", GetSettingsList ($Setting)) . ".data REGEXP '" . mysql_escape_string (substr ($ID, 6)) . "'";
+						}	else	{
+							$NewWhere[$Setting][] = "records." . mysql_escape_string ($Setting) . "id='" . mysql_escape_string ($ID) . "'";
+						}
+					}
 				if (is_array ($NewWhere[$Setting]))	{
 					$NewWhere[$Setting] = "(" . join (" OR ", $NewWhere[$Setting]) . ")";
 					$Join[ZydHash ($Setting, "Table")] = "LEFT JOIN recordsdata AS " . ZydHash ($Setting, "Table") . " ON records." . $Setting . "id=" . ZydHash ($Setting, "Table") . ".id AND " . ZydHash ($Setting, "Table") . ".field='" . mysql_escape_string ($Setting) . "'";
@@ -117,12 +135,13 @@ $MySQL_Result = DB_Query ("SELECT COUNT(records.id) AS Rows FROM records" . ($Jo
 $Rows = join ("", mysql_fetch_assoc ($MySQL_Result));
 $MySQL_Result = DB_Query ("SELECT records.id, date" . ($Select ? ", " . join (", ", $Select) : "") . " FROM records" . ($Join ? " " . join (" ", $Join) : NULL) . ($Where ? " WHERE (" . join (") AND (", $Where) . ")" : NULL) . " LIMIT " . mysql_escape_string ($Post['Limit'] ? $Post['Limit'] : 0) . ", " . $HitsPerPage);
 ?>
-<TABLE>
-<FORM METHOD="POST" NAME="Filter">
+<TABLE WIDTH="100%">
+<FORM METHOD="POST" NAME="List">
 <INPUT TYPE="HIDDEN" NAME="Page" VALUE="List">
 <INPUT TYPE="HIDDEN" NAME="Limit" VALUE="0">
-<TR><TH>Filters</TH><TH>Selection</TH></TR>
-<TR><TD><TABLE>
+<TR><TD>
+<TABLE>
+<TR><TH COLSPAN="100">Filters <FONT ONCLICK="alert ('This is the filter section\nHere you can add filters which limits the list rows...\n\nTo add a new filter, selected the field which you wish to filter\non in the \'\' ==[ New Filter ]==\'\' box,the page will then reload\nand you can choose to limit the results by selecting multiple\noptions or using RegEx (http://www.wellho.net/regex/mysql.html).\n\nTo remove a filter, simple click on the \'\'X\'\' in the filters box.');">[?]</FONT></TH></TR>
 <TR>
 <?
 if (is_array ($Filter))	{
@@ -131,11 +150,14 @@ if (is_array ($Filter))	{
 }
 ?>
 </TR>
-</TABLE></TD>
-<TD>
-<SELECT NAME="Selected[]" SIZE="10" MULTIPLE><? echo FilterOptions ($Post['Selected']); ?></SELECT>
+<TR><TD COLSPAN="100"><INPUT TYPE="SUBMIT" VALUE="Refresh"> &nbsp; <SELECT NAME="Filter[]" ONCHANGE="document.List.submit ();"><OPTION VALUE="">==[ New filter ]==</OPTION><? echo FilterOptions (); ?></SELECT></TD></TR>
+</TABLE>
+</TD><TD ALIGN="RIGHT"><TABLE>
+<TR><TH>Visible columns <FONT ONCLICK="alert ('This is the visivle columns section\nHere you can choose which fields that should\nbe displayed in the results list, multiple options are allowed.');">[?]</FONT></TH></TR>
+<TR><TD><SELECT NAME="Selected[]" SIZE="10" MULTIPLE><? echo FilterOptions ($Post['Selected']); ?></SELECT></TD></TR>
+</TABLE>
 </TD></TR>
-<TR><TD><INPUT TYPE="SUBMIT" VALUE="Refresh"></TD><TD><SELECT NAME="Filter[]" ONCHANGE="document.Filter.submit ();"><OPTION VALUE="">==[ New filter ]==</OPTION><? echo FilterOptions (); ?></SELECT></TD></TR>
+</TABLE></TD></TR>
 </FORM>
 </TABLE><BR>
 
@@ -158,8 +180,12 @@ for ($iPage = 1; $iPage <= ceil ($Rows / $HitsPerPage); $iPage++)	{
 </TR>
 <?
 while ($Data = mysql_fetch_assoc ($MySQL_Result))	{
+	$CSS = "LineM" . (++$iRow % 2) . "S";
 	?>
-<TR><TD><A HREF="?Details&ID=<? echo $Data['id']; ?>"><? echo $Data['id']; ?></A></TD><TD><? echo $Data['date']; ?></TD><?	if (is_array ($Select))	{	foreach (array_keys ($Select) as $Field)	{	?><TD><? echo $Data[$Field]; ?></TD><?	}	}	?></TR>
+<TR>
+<TD CLASS="<? echo $CSS, abs (++$iCol[$iRow] % 2 - 1); ?>"><A HREF="?Details&ID=<? echo $Data['id']; ?>"><? echo $Data['id']; ?></A></TD>
+<TD CLASS="<? echo $CSS, abs (++$iCol[$iRow] % 2 - 1); ?>"><? echo $Data['date']; ?></TD>
+<?	if (is_array ($Select))	{	foreach (array_keys ($Select) as $Field)	{	?><TD CLASS="<? echo $CSS, abs (++$iCol[$iRow] % 2 - 1); ?>"><? echo $Data[$Field]; ?></TD><?	}	}	?></TR>
 <?
 }
 ?>
@@ -168,7 +194,8 @@ while ($Data = mysql_fetch_assoc ($MySQL_Result))	{
 
 global $ZydHashCache;
 echo "\n<!--\n";
-print_r ($ZydHashCache);
+//print_r ($Post);
+//print_r ($ZydHashCache);
 echo "-->";
 
 function FilterOptions ($Selected = NULL)	{
@@ -199,42 +226,45 @@ function FilterOptions ($Selected = NULL)	{
 }
 
 function Filter ($Type, $Selected)	{
-//<TR><TD>RegEx<INPUT NAME=\"Filter[]\" VALUE=\"\"></TD></TR>
 	$Template = "<TD><TABLE>
-<TR><TH>%TYPE%</TH></TR>
-<TR><TD><SELECT NAME=\"Filter[]\" SIZE=\"10\" MULTIPLE>%LIST%</SELECT></TD></TR>
+<TR><TH>%TYPE% &nbsp; &nbsp; &nbsp; <A HREF=\"javascript:GetObjFromID('%FILTERID%').value=''; GetObjFromID('S%FILTERID%').value='';document.List.submit ();\">X</A></TH></TR>
+<TR><TD>RegEx <INPUT NAME=\"Filter%FILTERID%\" VALUE=\"%REGEXVALUE%\" ONKEYUP=\"GetObjFromID('%FILTERID%').value='%KEY%REGEX_' + this.value;\"></TD></TR>
+<INPUT TYPE=\"HIDDEN\" NAME=\"Filter[]\" ID=\"%FILTERID%\" VALUE=\"%KEY%REGEX_%REGEXVALUE%\">
+<TR><TD><SELECT NAME=\"Filter[]\" SIZE=\"6\" MULTIPLE ID=\"S%FILTERID%\">%LIST%</SELECT></TD></TR>
 </TABLE></TD>";
-//	if (is_array ($Selected[key ($Selected)]))	{	// Multi-part setting
-		foreach (array_keys ($Selected) as $SubType)	{
-//			echo "\n\n\n[[[", $SubType, "]]]\n\n\n";
-			unset ($Options);
-			if ($Type == "settingid")	{
-				$MySQL_Result = DB_Query ("SELECT settings.valueid, settingsdata.data FROM settings LEFT JOIN settingsdata ON settings.valueid=settingsdata.id WHERE settings.settingid='" . mysql_escape_string ($SubType) . "' GROUP BY settings.valueid ORDER BY settingsdata.data");
-				while ($Data = mysql_fetch_assoc ($MySQL_Result))
-					$Options[] = array ($Data['valueid'], $Data['data']);
-				$DisplayType = GetSettingsList ($SubType);
-			}	elseif ($Type == "index")	{
-				$MySQL_Result = DB_Query ("SELECT " . mysql_escape_string ($SubType) . " FROM records GROUP BY " . mysql_escape_string ($SubType) . " ORDER BY " . mysql_escape_string ($SubType));
-				while ($Data = mysql_fetch_assoc ($MySQL_Result))
-					$Options[] = array ($Data[$SubType], $Data[$SubType]);
-			}	elseif ($Type == "indexid")	{
-				$MySQL_Result = DB_Query ("SELECT id, data FROM recordsdata WHERE field='" . mysql_escape_string ($SubType) . "' ORDER BY data");
-				while ($Data = mysql_fetch_assoc ($MySQL_Result))
-					$Options[] = array ($Data['id'], $Data['data']);
-			}
-			foreach (array_keys ($Options) as $Option)
-				$Options[$Option] = "<OPTION VALUE=\"" . $Type . "@" . $SubType . "@" . $Options[$Option][0] . "\"" . (is_numeric ($Selected[$SubType][$Options[$Option][0]]) || $Selected[$SubType][$Options[$Option][0]] ? " SELECTED" : "") . ">" . $Options[$Option][1] . "</OPTION>";
-			$Return[] = str_replace (array ("%TYPE%", "%LIST%"), array ($Type . " - " . ($DisplayType ? $DisplayType : $SubType), join ("\n", $Options)), $Template);
+	foreach (array_keys ($Selected) as $SubType)	{
+		unset ($Options, $RegExValue);
+		foreach ($Selected[$SubType] as $Value)
+			if (substr ($Value, 0, 6) == "REGEX_")
+				$RegExValue = substr ($Value, 6);
+		if ($Type == "settingid")	{
+			$MySQL_Result = DB_Query ("SELECT settings.valueid, settingsdata.data FROM settings LEFT JOIN settingsdata ON settings.valueid=settingsdata.id WHERE settings.settingid='" . mysql_escape_string ($SubType) . "' GROUP BY settings.valueid ORDER BY settingsdata.data");
+			while ($Data = mysql_fetch_assoc ($MySQL_Result))
+				$Options[] = array ($Data['valueid'], $Data['data']);
+			$DisplayType = GetSettingsList ($SubType);
+		}	elseif ($Type == "index")	{
+			$MySQL_Result = DB_Query ("SELECT " . mysql_escape_string ($SubType) . " FROM records GROUP BY " . mysql_escape_string ($SubType) . " ORDER BY " . mysql_escape_string ($SubType));
+			while ($Data = mysql_fetch_assoc ($MySQL_Result))
+				$Options[] = array ($Data[$SubType], $Data[$SubType]);
+		}	elseif ($Type == "indexid")	{
+			$MySQL_Result = DB_Query ("SELECT id, data FROM recordsdata WHERE field='" . mysql_escape_string ($SubType) . "' ORDER BY data");
+			while ($Data = mysql_fetch_assoc ($MySQL_Result))
+				$Options[] = array ($Data['id'], $Data['data']);
 		}
-//	}	else	{	// Singe setting
-//		if ($Type == "crashed")	{
-//			$Option[0] = "No";
-//			$Option[1] = "Yes";
-//		}
-//		foreach (array_keys ($Option) as $Key)
-//			$Option[$Key] = "<OPTION VALUE=\"" . $Type . "@" . $Key . "\"" . (is_numeric ($Selected[$Key]) ? " SELECTED" : "") . ">" . $Option[$Key] . "</OPTION>";
-//		$Return[] = str_replace (array ("%TYPE%", "%LIST%"), array ($Type, join ("\n", $Option)), $Template);
-//	}
+		foreach (array_keys ($Options) as $Option)
+			$Options[$Option] = "<OPTION VALUE=\"" . $Type . "@" . $SubType . "@" . $Options[$Option][0] . "\"" . (is_numeric ($Selected[$SubType][$Options[$Option][0]]) || $Selected[$SubType][$Options[$Option][0]] ? " SELECTED" : "") . ">" . $Options[$Option][1] . "</OPTION>";
+		$Return[] = str_replace (array ("%TYPE%", "%LIST%", "%KEY%", "%REGEXVALUE%", "%FILTERID%"), array (($DisplayType ? $DisplayType : $SubType), join ("\n", $Options), $Type . "@" . $SubType . "@", $RegExValue, uniqid ()), $Template);
+	}
 	return (join ("\n\n\n", $Return));
 }
 ?>
+<SCRIPT>
+function GetObjFromID (id)	{
+	if (document.getElementById)
+		return (document.getElementById (id)); 
+	else	if (document.all)
+		return (document.all[id]);
+	else	if (document.layers)
+		return (document.layers[id]);
+}
+</SCRIPT>
