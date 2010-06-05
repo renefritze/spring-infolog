@@ -73,8 +73,8 @@ def output_post():
 
 if __name__=="__main__":
 	failed = []
-	print 'clearing DB'
-	import rebuild
+#	print 'clearing DB'
+#	import rebuild
 	sys.stdout.write( 'parsing' )
 	for fn in sys.argv[1:]:
 		try:
