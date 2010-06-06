@@ -1,7 +1,7 @@
 <?
 //print_r ($Post);
 if (!$Post['Selected'])
-	$Post['Selected'] = array ("index@crashed@");
+	$Post['Selected'] = array ("index@crashed");
 
 $HitsPerPage = 100;
 function ZydHash ($Value, $Type, $DispValue = NULL)	{
@@ -139,9 +139,12 @@ $MySQL_Result = DB_Query ("SELECT records.id, date" . ($Select ? ", " . join (",
 <FORM METHOD="POST" NAME="List">
 <INPUT TYPE="HIDDEN" NAME="Page" VALUE="List">
 <INPUT TYPE="HIDDEN" NAME="Limit" VALUE="0">
-<TR><TD>
-<TABLE>
-<TR><TH COLSPAN="100">Filters <FONT ONCLICK="alert ('This is the filter section\nHere you can add filters which limits the list rows...\n\nTo add a new filter, selected the field which you wish to filter\non in the \'\' ==[ New Filter ]==\'\' box,the page will then reload\nand you can choose to limit the results by selecting multiple\noptions or using RegEx (http://www.wellho.net/regex/mysql.html).\n\nTo remove a filter, simple click on the \'\'X\'\' in the filters box.');">[?]</FONT></TH></TR>
+<TR><TD><TABLE CLASS="Box">
+<TR><TH>Visible columns <FONT ONCLICK="InfoBox ('This is the visivle columns section', 'Here you can choose which fields that should be displayed in the results list.<BR>Multiple options are allowed.');">[?]</FONT></TH></TR>
+<TR><TD><SELECT NAME="Selected[]" SIZE="10" MULTIPLE><? echo FilterOptions ($Post['Selected']); ?></SELECT></TD></TR>
+</TABLE></TD>
+<TD ALIGN="RIGHT"><TABLE CLASS="Box">
+<TH COLSPAN="100">Filters <FONT ONCLICK="InfoBox ('This is the filter section', 'Here you can add filters which limits the list rows...<BR><BR>To add a new filter, selected the field which you wish to filter on in the \'\' ==[ Add new Filter ]==\'\' box,the page will then reload and you can choose to limit the results by selecting multiple options or using RegEx (' + ZydURL ('http://www.wellho.net/regex/mysql.html') + ').<BR><BR>To remove a filter, simple click on the &quot;X&quot; in the filters box.');">[?]</FONT></TH></TR>
 <TR>
 <?
 if (is_array ($Filter))	{
@@ -150,14 +153,9 @@ if (is_array ($Filter))	{
 }
 ?>
 </TR>
-<TR><TD COLSPAN="100"><INPUT TYPE="SUBMIT" VALUE="Refresh"> &nbsp; <SELECT NAME="Filter[]" ONCHANGE="document.List.submit ();"><OPTION VALUE="">==[ New filter ]==</OPTION><? echo FilterOptions (); ?></SELECT></TD></TR>
-</TABLE>
-</TD><TD ALIGN="RIGHT"><TABLE>
-<TR><TH>Visible columns <FONT ONCLICK="alert ('This is the visivle columns section\nHere you can choose which fields that should\nbe displayed in the results list, multiple options are allowed.');">[?]</FONT></TH></TR>
-<TR><TD><SELECT NAME="Selected[]" SIZE="10" MULTIPLE><? echo FilterOptions ($Post['Selected']); ?></SELECT></TD></TR>
+<TR><TD COLSPAN="100"><INPUT TYPE="SUBMIT" VALUE="Refresh"> &nbsp; <SELECT NAME="Filter[]" ONCHANGE="document.List.submit ();"><OPTION VALUE="">==[ Add new filter ]==</OPTION><? echo FilterOptions (); ?></SELECT></TD></TR>
 </TABLE>
 </TD></TR>
-</TABLE></TD></TR>
 </FORM>
 </TABLE><BR>
 
@@ -172,10 +170,10 @@ for ($iPage = 1; $iPage <= ceil ($Rows / $HitsPerPage); $iPage++)	{
 ?></TD></TR>
 <TR><TH COLSPAN="<? echo 2 + count ($Select); ?>">Results (<? echo ($Post['Limit'] + 1) . "-", min ($Post['Limit'] + $HitsPerPage, $Rows), " of " . $Rows; ?>)</TH></TR>
 <TR>
-<TH CLASS="Sub">ID</TH>
-<TH CLASS="Sub">Date</TH>
+<TH CLASS="LineM0">ID</TH>
+<TH CLASS="LineM1">Date</TH>
 <?	if (is_array ($Select))	foreach (array_keys ($Select) as $Field)	{	?>
-<TH CLASS="Sub"><? echo ZydHash ($Field, "Source"); ?></TH>
+<TH CLASS="LineM<? echo abs (++$iRowH % 2 - 1) ?>"><? echo ZydHash ($Field, "Source"); ?></TH>
 <?	}	?>
 </TR>
 <?
@@ -194,8 +192,7 @@ while ($Data = mysql_fetch_assoc ($MySQL_Result))	{
 
 global $ZydHashCache;
 echo "\n<!--\n";
-//print_r ($Post);
-//print_r ($ZydHashCache);
+print_r ($Post);
 echo "-->";
 
 function FilterOptions ($Selected = NULL)	{
@@ -216,6 +213,7 @@ function FilterOptions ($Selected = NULL)	{
 	$Options['indexid@gl_renderer'] = "index - gl_renderer";
 	$Options['indexid@lobby_client_version'] = "index - lobby_client_version";
 	$Options['index@contains_demo'] = "index - contains_demo";
+//	$Options['indexid@first_crash_lineid'] = "index - first crash line";
 	$Data = GetSettingsList ();
 	foreach (array_keys ($Data) as $ID)
 		$Options["settingid@" . $ID] = "setting - " . $Data[$ID];
@@ -226,8 +224,8 @@ function FilterOptions ($Selected = NULL)	{
 }
 
 function Filter ($Type, $Selected)	{
-	$Template = "<TD><TABLE>
-<TR><TH>%TYPE% &nbsp; &nbsp; &nbsp; <A HREF=\"javascript:GetObjFromID('%FILTERID%').value=''; GetObjFromID('S%FILTERID%').value='';document.List.submit ();\">X</A></TH></TR>
+	$Template = "<TD CLASS=\"NoPad\"><TABLE CLASS=\"Box\">
+<TR><TH CLASS=\"Sub\">%TYPE% &nbsp; &nbsp; &nbsp; <FONT ONCLICK=\"GetObjFromID('%FILTERID%').value=''; GetObjFromID('S%FILTERID%').length=0;document.List.submit ();\">[X]</FONT></TH></TR>
 <TR><TD>RegEx <INPUT NAME=\"Filter%FILTERID%\" VALUE=\"%REGEXVALUE%\" ONKEYUP=\"GetObjFromID('%FILTERID%').value='%KEY%REGEX_' + this.value;\"></TD></TR>
 <INPUT TYPE=\"HIDDEN\" NAME=\"Filter[]\" ID=\"%FILTERID%\" VALUE=\"%KEY%REGEX_%REGEXVALUE%\">
 <TR><TD><SELECT NAME=\"Filter[]\" SIZE=\"6\" MULTIPLE ID=\"S%FILTERID%\">%LIST%</SELECT></TD></TR>
@@ -266,5 +264,40 @@ function GetObjFromID (id)	{
 		return (document.all[id]);
 	else	if (document.layers)
 		return (document.layers[id]);
+}
+
+
+function CreateDiv (c, i, l, t)	{
+	if (!i)
+		i = 'DivID';
+	if (!l)
+		l = (window.MousePosX ? window.MousePosX + 15 : 300);
+	if (!t)
+		t = (window.MousePosY ? window.MousePosY - 5 : 300);
+	var Div = document.createElement('div');
+	Div.id=i;
+	Div.style.position='absolute';
+	Div.style.left=l + 'px';
+	Div.style.top=t + 'px';
+	Div.innerHTML=c;
+	document.body.appendChild(Div);
+}
+
+
+function RemoveDiv (i)	{
+	if (!i)
+		i = 'DivID';
+	if (GetObjFromID (i))
+		document.body.removeChild  (GetObjFromID (i));
+}
+
+
+function InfoBox (title, content)	{
+	CreateDiv ('<TABLE CLASS="InfoBox" ONCLICK="RemoveDiv (\'DivInfoBox\');"><TR><TH CLASS="InfoBox">' + title + '</TH></TR><TR><TD CLASS="InfoBox">' + content + '</TD></TR></TABLE>', 'DivInfoBox')
+}
+
+
+function ZydURL (url)	{
+	return ('<A HREF="' + url + '">' + url + '</A>')
 }
 </SCRIPT>
