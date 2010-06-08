@@ -213,7 +213,7 @@ function FilterOptions ($Selected = NULL)	{
 	$Options['indexid@gl_renderer'] = "index - gl_renderer";
 	$Options['indexid@lobby_client_version'] = "index - lobby_client_version";
 	$Options['index@contains_demo'] = "index - contains_demo";
-//	$Options['indexid@first_crash_lineid'] = "index - first crash line";
+	$Options['indexid@first_crash_line'] = "index - first crash line";
 	$Data = GetSettingsList ();
 	foreach (array_keys ($Data) as $ID)
 		$Options["settingid@" . $ID] = "setting - " . $Data[$ID];

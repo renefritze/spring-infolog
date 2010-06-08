@@ -32,6 +32,7 @@ class Crash(Base):
 	gl_vendorid				= Column( Integer )
 	gl_rendererid			= Column( Integer )
 	lobby_client_versionid	= Column( Integer )
+	first_crash_lineid		= Column( Integer )
 	crashed					= Column( Boolean, default=False )
 	contains_demo			= Column( Boolean, default=False )
 	
@@ -52,7 +53,7 @@ class Crash(Base):
 class RecordsData(Base):
 	__tablename__ 			= 'recordsdata'
 	id						= Column( Integer, primary_key=True )
-	field					= Column( Enum ('extensions', 'platform', 'spring', 'map', 'gamemod', 'gameid' ,'sdl_version' ,'glew_version' ,'al_vendor' ,'al_version' ,'al_renderer' ,'al_extensions' ,'alc_extensions' ,'al_device' ,'al_available_devices' ,'gl_version' ,'gl_vendor' ,'gl_renderer' ,'lobby_client_version') )
+	field					= Column( Enum ('extensions', 'platform', 'spring', 'map', 'gamemod', 'gameid' ,'sdl_version' ,'glew_version' ,'al_vendor' ,'al_version' ,'al_renderer' ,'al_extensions' ,'alc_extensions' ,'al_device' ,'al_available_devices' ,'gl_version' ,'gl_vendor' ,'gl_renderer' ,'lobby_client_version', 'first_crash_line') )
 	data					= Column( Text )
 
 
@@ -290,12 +291,11 @@ class Backend:
 						temp['line'] = value[0][1:-1]
 						temp['address'] = value[len (value) - 1][1:-1]
 						if (value[len (value) - 2][-1] == ')'):
-							temp['file'] = value[len (value) - 2][:value[len (value) - 2].rfind ('(')]
 							temp['function'] = value[len (value) - 2][value[len (value) - 2].rfind ('(') + 1:value[len (value) - 2].rfind ('+')]
 							temp['functionat'] = value[len (value) - 2][value[len (value) - 2].rfind ('+') + 1:-1]
-						else:
-							temp['file'] = value[len (value) - 2]
-						temp['file'] = temp['file'][max (temp['file'].rfind ('\\'), temp['file'].rfind ('/')) + 1:]
+						
+						temp['file'] = self.parseInfologSub ('^\[[ 0-9]*\] \([0-9]*\) ', line)
+						temp['file'] = temp['file'].replace ('[' + temp['address'] + ']', '').replace ('(' + str (temp['function']) + '+' + str (temp['functionat']) + ')', '').strip ()
 						
 						stacktrace = Stacktrace()
 						stacktrace.reportid = crash.id
@@ -305,6 +305,12 @@ class Backend:
 						stacktrace.line = int (temp['line'])
 						stacktrace.raw = line
 						stacktracelist.append ( stacktrace )
+						
+						# First line for grouping reasons... (containing \AI\Skirmish\ or spring.exe)
+						if not crash.first_crash_lineid:
+							match = self.parseInfologSub ('(\SAI\SSkirmish[^( \()]*)|(\S(spring|spring-mt).exe)', line, 0)
+							if (match):
+								crash.first_crash_lineid = self.getRecordDataID (session, 'first_crash_line', match + ' [' + temp['address'] + ']')
 			
 			if (al_available_devices):
 				crash.al_available_devicesid = self.getRecordDataID (session, 'al_available_devices', "\n".join (al_available_devices))

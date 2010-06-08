@@ -11,7 +11,7 @@ $Extensions = GetExtensionMapping ();
 if (is_array ($Stacktrace))	{	?>
 <TR><TH CLASS="Sub" COLSPAN="2">Stacktrace</TH></TR>
 <TR><TD CLASS="NoPad" COLSPAN="2"><TABLE CELLSPACING="0" CELLPADDING="0">
-<COL WIDTH="20"><COL WIDTH="90"><COL WIDTH="330"><COL WIDTH="60"><COL WIDTH="100">
+<COL WIDTH="20"><COL WIDTH="600"><COL WIDTH="330"><COL WIDTH="60"><COL WIDTH="100">
 <?	foreach ($Stacktrace as $Row)	{
 		?>
 <TR>
@@ -28,7 +28,7 @@ if (is_array ($Stacktrace))	{	?>
 ?>
 <TR><TH CLASS="Sub" COLSPAN="2">Data</TH></TR>
 <?
-foreach (array ("spring", "platform", "map", "gamemod", "gameid", "sdl_version", "glew_version", "al_vendor", "al_version", "al_renderer", "al_extensions", "alc_extensions", "al_device", "al_available_devices", "gl_version", "gl_vendor", "gl_renderer", "lobby_client_version") as $Field)	{	?>
+foreach (array ("spring", "platform", "map", "gamemod", "gameid", "sdl_version", "glew_version", "al_vendor", "al_version", "al_renderer", "al_extensions", "alc_extensions", "al_device", "al_available_devices", "gl_version", "gl_vendor", "gl_renderer", "lobby_client_version", "first_crash_line") as $Field)	{	?>
 <TR><TD><? echo $Field; ?></TD><TD><? echo $Data[$Field]; ?></TD></TR>
 <?
 }
