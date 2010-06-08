@@ -308,7 +308,7 @@ class Backend:
 						
 						# First line for grouping reasons... (containing \AI\Skirmish\ or spring.exe)
 						if not crash.first_crash_lineid:
-							match = self.parseInfologSub ('(\SAI\SSkirmish[^( \()]*)|(\S(spring|spring-mt).exe)', line, 0)
+							match = self.parseInfologSub ('(\SAI\SSkirmish[^( \()]*)|(\S(spring|spring-hl|spring-gml).exe)', line, 0)
 							if (match):
 								crash.first_crash_lineid = self.getRecordDataID (session, 'first_crash_line', match + ' [' + temp['address'] + ']')
 			
