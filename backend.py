@@ -2,7 +2,7 @@
 from sqlalchemy import *
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import *
-import datetime, os, re, genshi
+import datetime, os, re, genshi, xmlrpclib
 
 current_db_rev = 5
 Base = declarative_base()
@@ -35,6 +35,7 @@ class Crash(Base):
 	first_crash_lineid		= Column( Integer )
 	crashed					= Column( Boolean, default=False )
 	contains_demo			= Column( Boolean, default=False )
+	springversion			= ''	# Contains the spring version string
 	
 #	settings = relation( 'Settings', order_by='Settings.setting.desc' )
 #	stacktrace = relation( 'Stacktrace', order_by='Stacktrace.frame' )
@@ -82,9 +83,12 @@ class Stacktrace(Base):
 	reportid				= Column( Integer, ForeignKey( Crash.id ), primary_key=True )
 	orderid					= Column( Integer, primary_key=True )
 	stacktraceid			= Column( Integer )
+	translatedid			= Column( Integer )
 	type					= Column( String(10))
 	line					= Column( Integer )
 	raw						= Column( String(255) )
+	function				= ''
+	address					= ''
 
 
 class StacktraceData(Base):
@@ -94,6 +98,25 @@ class StacktraceData(Base):
 	functionname			= Column( String(128) )
 	functionaddress			= Column( String(16) )
 	address					= Column( String(10) )
+
+
+class StacktraceTranslated(Base):
+	__tablename__ 			= 'stacktracetranslated'
+	id						= Column( Integer, primary_key=True )
+	file					= Column( String(128) )
+	line					= Column( Integer )
+
+
+class CacheStacktrace(Base):
+	__tablename__ 			= 'cachestacktrace'
+	id						= Column( Integer, primary_key=True )
+	spring					= Column( String(128) )
+	file					= Column( String(128) )
+	address					= Column( String(10) )
+	cppfile					= Column( String(128) )
+	cppline					= Column( Integer )
+	lastscan				= Column( Integer )
+	successful				= Column( Boolean, default=False )
 
 
 class Cache(Base):
@@ -151,6 +174,7 @@ class Backend:
 		self.getSettingIDCache = {}
 		self.getStacktraceIDCache = {}
 		self.getRecordDataIDCache = {}
+		self.getCacheTranslateStacktraceCache = {}
 	
 
 	def UpdateDBScheme( self, oldrev, current_db_rev ):
@@ -211,6 +235,7 @@ class Backend:
 			stacktrace_key = 0
 			stacktrace_id = 0
 			stacktracelist = []
+			springline = ''
 			
 			for line in data['infolog.txt'].splitlines ():
 				if re.search ('^OS: ', line):
@@ -268,10 +293,12 @@ class Backend:
 					match = re.search ('^Spring(/d*\.)*', line)
 					if (match):
 						crash.springid = self.getRecordDataID (session, 'spring', line)
+						crash.springversion = line
 				elif (crash.springid):
 					match = re.search ('^\[[ 0-9]*\] Spring( /d*\.)*.*has crashed.$', line)
 					if (match):
 						crash.crashed = True
+						springline = line
 				
 				match = re.search ('^\[[ 0-9]*\] Stacktrace \(', line)
 				if (match):
@@ -304,11 +331,14 @@ class Backend:
 						stacktrace.type = stacktrace_type
 						stacktrace.line = int (temp['line'])
 						stacktrace.raw = line
+						stacktrace.function = temp['file']
+						stacktrace.address = temp['address']
 						stacktracelist.append ( stacktrace )
 						
 						# First line for grouping reasons... (containing \AI\Skirmish\ or spring.exe)
 						if not crash.first_crash_lineid:
-							match = self.parseInfologSub ('(\SAI\SSkirmish[^( \()]*)|(\S(spring|spring-hl|spring-gml).exe)', line, 0)
+							match = self.findSpringModuleFile (line)
+#							match = self.parseInfologSub ('(\SAI\SSkirmish[^( \()]*)|(\S(spring|spring-hl|spring-mt).exe)', line, 0)
 							if (match):
 								crash.first_crash_lineid = self.getRecordDataID (session, 'first_crash_line', match + ' [' + temp['address'] + ']')
 			
@@ -322,6 +352,7 @@ class Backend:
 				crash.platformid = self.getRecordDataID (session, 'platform', data['platform.txt'].strip ())
 		
 			if len (stacktracelist) > 0:
+				self.translateStacktrace (session, crash.springversion, stacktracelist)
 				session.add_all( stacktracelist )
 				session.commit()
 
@@ -438,3 +469,127 @@ class Backend:
 			session.add( recordsdata )
 			session.commit()
 			return (recordsdata.id)
+	
+	
+	def translateStacktrace (self, session, springversion, stacktracelist):
+#		infolog = '[0] ' + springversion + ' has crashed.'
+		for stacktrace in stacktracelist:
+			result = self.getCacheTranslateStacktrace (session, springversion, stacktrace.function, stacktrace.address)
+			if (result):
+				print ''
+				print 'File:' + str (result['file'])
+				print 'Line:' + str (result['line'])
+				print 'Successful:' + str (result['successful'])
+				break
+#			infolog = infolog + '\n[0] (0) ' + stacktrace.function + ' [' + stacktrace.address + ']'
+#		print ''
+#		print infolog
+#		buildbot = xmlrpclib.ServerProxy('http://springrts.com:8000')
+#		try:
+#			d = buildbot.translate_stacktrace (infolog)
+#			d = s.translate_stacktrace ('[      0] Spring 0.81+.0.0 (0.81.2.1-1063-g1cc34c0) has crashed.' + '\n' + '[      0] (0) C:\Program Files\Spring\spring.exe [0x0080F6F8]')
+#			d = buildbot.translate_stacktrace ('[      0] Spring 0.81+.0.0 (0.81.2.1-1063-g1cc34c0) has crashed.' + '\n' + '[0] (0) C:\Program Files\Spring\spring.exe [0x0050F6F7]')
+#		except xmlrpclib.Fault, Error:
+#			if Error.faultString.index ('Unable to parse detailed version string') != -1:
+#				print 'UNKNOWN SPRING VERSION'
+#			else:
+#				print 'UNKNOWN ERROR'
+#				print "A fault occurred"
+#				print "Fault code: %d" % err.faultCode
+#				print "Fault string: %s" % err.faultString
+#				print err
+#			return (false)
+#		
+#		
+#		print ''
+#		print ''
+#		print spring + '\n' + stacktrace
+#		print ''
+#		print d
+#		print d[0][0]
+#		print d[0][1]
+#		terminate
+
+
+
+	def getCacheTranslateStacktrace (self, session, spring, file, address):
+		if not self.findSpringModuleFile (file):
+			return (None)
+		spring = self.dbEncode (spring.strip ())
+		file = self.dbEncode (self.findSpringModuleFile (file.strip ()))
+		address = self.dbEncode (address.strip ())
+		if not spring:
+			return (None)
+
+		if self.getCacheTranslateStacktraceCache.has_key (spring):
+			if self.getCacheTranslateStacktraceCache[spring].has_key (file):
+				if self.getCacheTranslateStacktraceCache[spring][file].has_key (address):
+					return (self.getCacheTranslateStacktraceCache[spring][file][address])
+		
+		id = session.query( CacheStacktrace.id ).filter( CacheStacktrace.spring == spring ).filter( CacheStacktrace.file == file ).filter( CacheStacktrace.address == address ).first()
+#		id = session.query( CacheStacktrace.id ).filter( CacheStacktrace.address == address ).first()
+		try:
+			if session.query( CacheStacktrace.id ).filter( and_ (CacheStacktrace.spring == spring, CacheStacktrace.file == file, CacheStacktrace.address == address ) ).one():
+#			if session.query( CacheStacktrace.id ).filter( and_ (CacheStacktrace.address == address ) ).one():
+				if not self.getCacheTranslateStacktraceCache.has_key (spring):
+					self.getCacheTranslateStacktraceCache[spring] = {}
+					if not self.getCacheTranslateStacktraceCache[spring].has_key (file):
+						self.getCacheTranslateStacktraceCache[spring][file] = {}
+						if not self.getCacheTranslateStacktraceCache[spring][file].has_key (address):
+							self.getCacheTranslateStacktraceCache[spring][file][address] = {'file':id.cppfile, 'line':id.cppline, 'successful':id.successful}
+				return ({'file':id.cppfile, 'line':id.cppline, 'successful':id.successful})
+		except:
+			successful = False
+			cppfile = None
+			cppline = None
+			buildbot = xmlrpclib.ServerProxy('http://springrts.com:8000')
+			try:
+				result = buildbot.translate_stacktrace ('[      0] ' + spring + ' has crashed.' + '\n' + '[0] (0) ' + file + ' [' + address + ']')
+				successful = True
+			except xmlrpclib.Fault, Error:
+				if Error.faultString.index ('Unable to parse detailed version string') != -1:
+					successful = False
+
+			cachestacktrace = CacheStacktrace()
+			cachestacktrace.spring = spring
+			cachestacktrace.file = file
+			cachestacktrace.address = address
+			cachestacktrace.cppfile = cppfile
+			cachestacktrace.cppline = cppline
+			cachestacktrace.lastscan = 0
+			cachestacktrace.successful = successful
+			session.add( cachestacktrace )
+			session.commit()
+			return ({'file':cachestacktrace.cppfile, 'line':cachestacktrace.cppline, 'successful':successful})
+
+
+	###########################################################################################
+	# Function which returns the spring file, if available...
+	# C:\Program Files\Spring\AI\Skirmish\RAI\0.601\SkirmishAI.dll => \AI\Skirmish\RAI\0.601\SkirmishAI.dll
+	#################################################################################
+	def findSpringModuleFile (self, line):
+		match = self.parseInfologSub ('(\SAI\SSkirmish[^( \()]*)|(\S(spring|spring-hl|spring-mt).exe)', line, 0)
+		if match:
+			if match.find ('.exe') != -1 or match.find ('.dll') != -1:
+				return (match)
+		return (None)
+
+
+#
+#class StacktraceTranslated(Base):
+#	__tablename__ 			= 'stacktracetranslated'
+#	id						= Column( Integer, primary_key=True )
+#	file					= Column( String(128) )
+#	line					= Column( Integer )
+#
+#
+#class CacheStacktrace(Base):
+#	__tablename__ 			= 'cachestacktrace'
+#	id						= Column( Integer, primary_key=True )
+#	spring					= Column( String(128) )
+#	file					= Column( String(128) )
+#	address					= Column( String(10) )
+#	cppfile					= Column( String(128) )
+#	cppline					= Column( Integer )
+#	lastscan				= Column( Integer )
+#	successful				= Column( Boolean, default=False )
