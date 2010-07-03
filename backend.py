@@ -526,19 +526,18 @@ class Backend:
 				if self.getCacheTranslateStacktraceCache[spring][file].has_key (address):
 					return (self.getCacheTranslateStacktraceCache[spring][file][address])
 		
-		id = session.query( CacheStacktrace.id ).filter( CacheStacktrace.spring == spring ).filter( CacheStacktrace.file == file ).filter( CacheStacktrace.address == address ).first()
+		id = session.query( CacheStacktrace ).filter( CacheStacktrace.spring == spring ).filter( CacheStacktrace.file == file ).filter( CacheStacktrace.address == address ).first()
 #		id = session.query( CacheStacktrace.id ).filter( CacheStacktrace.address == address ).first()
-		try:
-			if session.query( CacheStacktrace.id ).filter( and_ (CacheStacktrace.spring == spring, CacheStacktrace.file == file, CacheStacktrace.address == address ) ).one():
+		if id:
 #			if session.query( CacheStacktrace.id ).filter( and_ (CacheStacktrace.address == address ) ).one():
-				if not self.getCacheTranslateStacktraceCache.has_key (spring):
-					self.getCacheTranslateStacktraceCache[spring] = {}
-					if not self.getCacheTranslateStacktraceCache[spring].has_key (file):
-						self.getCacheTranslateStacktraceCache[spring][file] = {}
-						if not self.getCacheTranslateStacktraceCache[spring][file].has_key (address):
-							self.getCacheTranslateStacktraceCache[spring][file][address] = {'file':id.cppfile, 'line':id.cppline, 'successful':id.successful}
-				return ({'file':id.cppfile, 'line':id.cppline, 'successful':id.successful})
-		except:
+			if not self.getCacheTranslateStacktraceCache.has_key (spring):
+				self.getCacheTranslateStacktraceCache[spring] = {}
+				if not self.getCacheTranslateStacktraceCache[spring].has_key (file):
+					self.getCacheTranslateStacktraceCache[spring][file] = {}
+					if not self.getCacheTranslateStacktraceCache[spring][file].has_key (address):
+						self.getCacheTranslateStacktraceCache[spring][file][address] = {'file':id.cppfile, 'line':id.cppline, 'successful':id.successful}
+			return ({'file':id.cppfile, 'line':id.cppline, 'successful':id.successful})
+		else:
 			successful = False
 			cppfile = None
 			cppline = None
