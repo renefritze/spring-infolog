@@ -480,7 +480,6 @@ class Backend:
 				print 'File:' + str (result['file'])
 				print 'Line:' + str (result['line'])
 				print 'Successful:' + str (result['successful'])
-				break
 #			infolog = infolog + '\n[0] (0) ' + stacktrace.function + ' [' + stacktrace.address + ']'
 #		print ''
 #		print infolog
@@ -544,7 +543,11 @@ class Backend:
 			buildbot = xmlrpclib.ServerProxy('http://springrts.com:8000')
 			try:
 				result = buildbot.translate_stacktrace ('[      0] ' + spring + ' has crashed.' + '\n' + '[0] (0) ' + file + ' [' + address + ']')
-				successful = True
+				if len (result) == 1:
+					if len (result[0]) == 4:
+						cppfile = result[0][2]
+						cppline = result[0][3]
+						successful = True
 			except xmlrpclib.Fault, Error:
 				if Error.faultString.index ('Unable to parse detailed version string') != -1:
 					successful = False
