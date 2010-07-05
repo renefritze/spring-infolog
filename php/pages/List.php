@@ -64,6 +64,13 @@ if ($Post['Filter'])	{
 		$Join['LEFT JOIN stacktrace ON records.id=stacktrace.reportid'] = "LEFT JOIN stacktrace ON records.id=stacktrace.reportid";
 		$Where[] = "(" . join (" OR ", $NewWhere) . ")";
 	}
+	if (is_array ($Filter['translatedstacktraceid']))	{
+		unset ($NewWhere);
+		foreach ($Filter['translatedstacktraceid'] as $ID)
+			$NewWhere[] = "stacktrace.translatedid='" . mysql_escape_string ($ID) . "'";
+		$Join['LEFT JOIN stacktrace ON records.id=stacktrace.reportid'] = "LEFT JOIN stacktrace ON records.id=stacktrace.reportid";
+		$Where[] = "(" . join (" OR ", $NewWhere) . ")";
+	}
 	if (is_array ($Filter['index']))	{
 		unset ($NewWhere);
 		foreach (array_keys ($Filter['index']) as $Setting)	{
@@ -106,6 +113,31 @@ if ($Post['Filter'])	{
 		if (is_array ($NewWhere))
 			$Where[] = "(" . join (" AND ", $NewWhere) . ")";
 	}
+	if (is_array ($Filter['stacktrace']))	{
+		unset ($NewWhere);
+		foreach (array_keys ($Filter['stacktrace']) as $Setting)	{
+			if (is_array ($Filter['stacktrace'][$Setting]))	{
+				foreach ($Filter['stacktrace'][$Setting] as $ID)
+					if ($ID || is_numeric ($ID))	{
+						if (substr ($ID, 0, 6) == "REGEX_")	{
+							if (substr ($ID, 6) || is_numeric (substr ($ID, 6)))
+								$NewWhere[$Setting][] = "CONCAT(stacktracetranslated.file, ' (', stacktracetranslated.line, ')') REGEXP '" . mysql_escape_string (substr ($ID, 6)) . "'";
+								$Join[ZydHash ("stacktrace", "Table")] = "LEFT JOIN stacktrace ON records.id=stacktrace.reportid";
+								$Join[ZydHash ("stacktracetranslated", "Table")] = "LEFT JOIN stacktracetranslated ON stacktrace." . $Setting . "id=stacktracetranslated.id";
+						}	else	{
+							$NewWhere[$Setting][] = "stacktrace." . mysql_escape_string ($Setting) . "id='" . mysql_escape_string ($ID) . "'";
+						}
+					}
+				if (is_array ($NewWhere[$Setting]))	{
+					$NewWhere[$Setting] = "(" . join (" OR ", $NewWhere[$Setting]) . ")";
+					$Join[ZydHash ("stacktrace", "Table")] = "LEFT JOIN stacktrace ON records.id=stacktrace.reportid";
+				}
+			}
+		}
+		if (is_array ($NewWhere))
+			$Where[] = "(" . join (" AND ", $NewWhere) . ")";
+	}
+	
 	if (is_array ($Filter))
 		foreach (array_keys ($Filter) as $Key)
 			foreach (array_keys ($Filter[$Key]) as $Key2)
@@ -126,6 +158,10 @@ foreach ($Post['Selected'] as $Selected)	{
 	}	elseif ($Selected[0] == "indexid")	{
 		$Join[ZydHash ($Selected[1], "Table")] = "LEFT JOIN recordsdata AS " . ZydHash ($Selected[1], "Table") . " ON records." . mysql_escape_string ($Selected[1]) . "id=" . ZydHash ($Selected[1], "Table") . ".id";
 		$Select[ZydHash ($Selected[1], "Value")] = ZydHash ($Selected[1], "Table") . ".data AS " . ZydHash ($Selected[1], "Value");
+	}	elseif ($Selected[0] == "stacktrace")	{
+		$Join[ZydHash ("stacktrace", "Table")] = "LEFT JOIN stacktrace ON records.id=stacktrace.reportid";
+		$Join[ZydHash ("stacktracetranslated", "Table")] = "LEFT JOIN stacktracetranslated ON stacktrace." . $Setting . "id=stacktracetranslated.id";
+		$Select[ZydHash ($Selected[1], "Value")] = "CONCAT(stacktracetranslated.file, ' (', stacktracetranslated.line, ')') AS " . ZydHash ($Selected[1], "Value");
 	}
 	$PageURL .= "&Selected[]=" . join ("@", $Selected);
 }
@@ -133,7 +169,7 @@ foreach ($Post['Selected'] as $Selected)	{
 //echo "\n\nSELECT records.id, date" . ($Select ? ", " . join (", ", $Select) : "") . " FROM records" . ($Join ? " " . join (" ", $Join) : NULL) . ($Where ? " WHERE (" . join (") AND (", $Where) . ")" : NULL), "\n\n\n<BR>";
 $MySQL_Result = DB_Query ("SELECT COUNT(records.id) AS Rows FROM records" . ($Join ? " " . join (" ", $Join) : NULL) . ($Where ? " WHERE (" . join (") AND (", $Where) . ")" : NULL));
 $Rows = join ("", mysql_fetch_assoc ($MySQL_Result));
-$MySQL_Result = DB_Query ("SELECT records.id, date" . ($Select ? ", " . join (", ", $Select) : "") . " FROM records" . ($Join ? " " . join (" ", $Join) : NULL) . ($Where ? " WHERE (" . join (") AND (", $Where) . ")" : NULL) . " LIMIT " . mysql_escape_string ($Post['Limit'] ? $Post['Limit'] : 0) . ", " . $HitsPerPage);
+$MySQL_Result = DB_Query ("SELECT records.id, date" . ($Select ? ", " . join (", ", $Select) : "") . " FROM records" . ($Join ? " " . join (" ", $Join) : NULL) . ($Where ? " WHERE (" . join (") AND (", $Where) . ")" : NULL) . " ORDER BY records.id LIMIT " . mysql_escape_string ($Post['Limit'] ? $Post['Limit'] : 0) . ", " . $HitsPerPage);
 ?>
 <TABLE WIDTH="100%">
 <FORM METHOD="POST" NAME="List">
@@ -214,6 +250,9 @@ function FilterOptions ($Selected = NULL)	{
 	$Options['indexid@lobby_client_version'] = "index - lobby_client_version";
 	$Options['index@contains_demo'] = "index - contains_demo";
 	$Options['indexid@first_crash_line'] = "index - first crash line";
+	$Options['indexid@first_crash_line_translated'] = "index - first crash line translated";
+//	$Options['stacktrace@stacktrace'] = "stacktrace - stacktrace";
+	$Options['stacktrace@translated'] = "stacktrace - translated (multi-row)";
 	$Data = GetSettingsList ();
 	foreach (array_keys ($Data) as $ID)
 		$Options["settingid@" . $ID] = "setting - " . $Data[$ID];
@@ -248,6 +287,10 @@ function Filter ($Type, $Selected)	{
 			$MySQL_Result = DB_Query ("SELECT id, data FROM recordsdata WHERE field='" . mysql_escape_string ($SubType) . "' ORDER BY data");
 			while ($Data = mysql_fetch_assoc ($MySQL_Result))
 				$Options[] = array ($Data['id'], $Data['data']);
+		}	elseif ($Type == "stacktrace" && $SubType == "translated")	{
+			$MySQL_Result = DB_Query ("SELECT id, file, line FROM stacktracetranslated ORDER BY file, line");
+			while ($Data = mysql_fetch_assoc ($MySQL_Result))
+				$Options[] = array ($Data['id'], $Data['file'] . " (" . $Data['line'] . ")");
 		}
 		foreach (array_keys ($Options) as $Option)
 			$Options[$Option] = "<OPTION VALUE=\"" . $Type . "@" . $SubType . "@" . $Options[$Option][0] . "\"" . (is_numeric ($Selected[$SubType][$Options[$Option][0]]) || $Selected[$SubType][$Options[$Option][0]] ? " SELECTED" : "") . ">" . $Options[$Option][1] . "</OPTION>";

@@ -10,8 +10,16 @@ $Extensions = GetExtensionMapping ();
 <?
 if (is_array ($Stacktrace))	{	?>
 <TR><TH CLASS="Sub" COLSPAN="2">Stacktrace</TH></TR>
-<TR><TD CLASS="NoPad" COLSPAN="2"><TABLE CELLSPACING="0" CELLPADDING="0">
-<COL WIDTH="20"><COL WIDTH="600"><COL WIDTH="330"><COL WIDTH="60"><COL WIDTH="100">
+<TR><TD CLASS="NoPad" COLSPAN="2"><TABLE CELLSPACING="0" CELLPADDING="0" WIDTH="100%">
+<TR>
+<TH CLASS="SubSub">Order</TH>
+<TH CLASS="SubSub">File</TH>
+<TH CLASS="SubSub">Address</TH>
+<TH CLASS="SubSub">Function</TH>
+<TH CLASS="SubSub">Address</TH>
+<TH CLASS="SubSub">File</TH>
+<TH CLASS="SubSub">Line</TH>
+</TR>
 <?	foreach ($Stacktrace as $Row)	{
 		?>
 <TR>
@@ -20,6 +28,8 @@ if (is_array ($Stacktrace))	{	?>
 <TD><? echo $Row['functionname']; ?></TD>
 <TD><? echo $Row['functionat']; ?></TD>
 <TD><? echo $Row['address']; ?></TD>
+<TD><? echo $Row['file']; ?></TD>
+<TD><? echo $Row['line']; ?></TD>
 </TR>
 <?	}	?>
 </TABLE></TD></TR>

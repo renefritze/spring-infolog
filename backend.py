@@ -33,6 +33,7 @@ class Crash(Base):
 	gl_rendererid			= Column( Integer )
 	lobby_client_versionid	= Column( Integer )
 	first_crash_lineid		= Column( Integer )
+	first_crash_line_translatedid	= Column( Integer )
 	crashed					= Column( Boolean, default=False )
 	contains_demo			= Column( Boolean, default=False )
 	springversion			= ''	# Contains the spring version string
@@ -54,7 +55,7 @@ class Crash(Base):
 class RecordsData(Base):
 	__tablename__ 			= 'recordsdata'
 	id						= Column( Integer, primary_key=True )
-	field					= Column( Enum ('extensions', 'platform', 'spring', 'map', 'gamemod', 'gameid' ,'sdl_version' ,'glew_version' ,'al_vendor' ,'al_version' ,'al_renderer' ,'al_extensions' ,'alc_extensions' ,'al_device' ,'al_available_devices' ,'gl_version' ,'gl_vendor' ,'gl_renderer' ,'lobby_client_version', 'first_crash_line') )
+	field					= Column( Enum ('extensions', 'platform', 'spring', 'map', 'gamemod', 'gameid' ,'sdl_version' ,'glew_version' ,'al_vendor' ,'al_version' ,'al_renderer' ,'al_extensions' ,'alc_extensions' ,'al_device' ,'al_available_devices' ,'gl_version' ,'gl_vendor' ,'gl_renderer' ,'lobby_client_version', 'first_crash_line', 'first_crash_line_translated') )
 	data					= Column( Text )
 
 
@@ -175,6 +176,7 @@ class Backend:
 		self.getStacktraceIDCache = {}
 		self.getRecordDataIDCache = {}
 		self.getCacheTranslateStacktraceCache = {}
+		self.TranslateStacktraceCache = {}
 	
 
 	def UpdateDBScheme( self, oldrev, current_db_rev ):
@@ -341,6 +343,10 @@ class Backend:
 #							match = self.parseInfologSub ('(\SAI\SSkirmish[^( \()]*)|(\S(spring|spring-hl|spring-mt).exe)', line, 0)
 							if (match):
 								crash.first_crash_lineid = self.getRecordDataID (session, 'first_crash_line', match + ' [' + temp['address'] + ']')
+								trans = self.getCacheTranslateStacktrace (session, crash.springversion, match, temp['address'])
+								if trans['successful']:
+									crash.first_crash_line_translatedid = self.getRecordDataID (session, 'first_crash_line_translated', trans['file'] + ' (' + str (trans['line']) + ')')
+#								crash.first_crash_line_translatedid = self.getTranslateStacktrace (session, crash.springversion, match, temp['address'])
 			
 			if (al_available_devices):
 				crash.al_available_devicesid = self.getRecordDataID (session, 'al_available_devices', "\n".join (al_available_devices))
@@ -352,7 +358,7 @@ class Backend:
 				crash.platformid = self.getRecordDataID (session, 'platform', data['platform.txt'].strip ())
 		
 			if len (stacktracelist) > 0:
-				self.translateStacktrace (session, crash.springversion, stacktracelist)
+				stacktracelist = self.translateStacktrace (session, crash.springversion, stacktracelist)
 				session.add_all( stacktracelist )
 				session.commit()
 
@@ -472,43 +478,40 @@ class Backend:
 	
 	
 	def translateStacktrace (self, session, springversion, stacktracelist):
-#		infolog = '[0] ' + springversion + ' has crashed.'
 		for stacktrace in stacktracelist:
-			result = self.getCacheTranslateStacktrace (session, springversion, stacktrace.function, stacktrace.address)
-			if (result):
-				print ''
-				print 'File:' + str (result['file'])
-				print 'Line:' + str (result['line'])
-				print 'Successful:' + str (result['successful'])
-#			infolog = infolog + '\n[0] (0) ' + stacktrace.function + ' [' + stacktrace.address + ']'
-#		print ''
-#		print infolog
-#		buildbot = xmlrpclib.ServerProxy('http://springrts.com:8000')
-#		try:
-#			d = buildbot.translate_stacktrace (infolog)
-#			d = s.translate_stacktrace ('[      0] Spring 0.81+.0.0 (0.81.2.1-1063-g1cc34c0) has crashed.' + '\n' + '[      0] (0) C:\Program Files\Spring\spring.exe [0x0080F6F8]')
-#			d = buildbot.translate_stacktrace ('[      0] Spring 0.81+.0.0 (0.81.2.1-1063-g1cc34c0) has crashed.' + '\n' + '[0] (0) C:\Program Files\Spring\spring.exe [0x0050F6F7]')
-#		except xmlrpclib.Fault, Error:
-#			if Error.faultString.index ('Unable to parse detailed version string') != -1:
-#				print 'UNKNOWN SPRING VERSION'
-#			else:
-#				print 'UNKNOWN ERROR'
-#				print "A fault occurred"
-#				print "Fault code: %d" % err.faultCode
-#				print "Fault string: %s" % err.faultString
-#				print err
-#			return (false)
-#		
-#		
-#		print ''
-#		print ''
-#		print spring + '\n' + stacktrace
-#		print ''
-#		print d
-#		print d[0][0]
-#		print d[0][1]
-#		terminate
+			stacktrace.translatedid = self.getTranslateStacktrace (session, springversion, stacktrace.function, stacktrace.address)
+		return (stacktracelist)
+#class StacktraceTranslated(Base):
+#	__tablename__ 			= 'stacktracetranslated'
+#	id						= Column( Integer, primary_key=True )
+#	file					= Column( String(128) )
+#	line					= Column( Integer )
+#
+	
+	def getTranslateStacktrace (self, session, springversion, function, address):
+		id = None
+		result = self.getCacheTranslateStacktrace (session, springversion, function, address)
+		if (result):
+			if result['successful']:
+				if self.TranslateStacktraceCache.has_key (result['file']):
+					if self.TranslateStacktraceCache[result['file']].has_key (result['line']):
+						id = self.TranslateStacktraceCache[result['file']][result['line']]
+				if not id:
+					id = session.query( StacktraceTranslated ).filter( StacktraceTranslated.file == result['file'] ).filter( StacktraceTranslated.line == result['line'] ).first()
+					if id:
+						id = id.id
+					else:
+						stacktracetranslated = StacktraceTranslated()
+						stacktracetranslated.file = result['file']
+						stacktracetranslated.line = result['line']
+						session.add( stacktracetranslated )
+						session.commit()
 
+						if not self.TranslateStacktraceCache.has_key (result['file']):
+							self.TranslateStacktraceCache[result['file']] = {}
+						self.TranslateStacktraceCache[result['file']][result['line']] = stacktracetranslated.id
+						id = stacktracetranslated.id
+		return (id)
 
 
 	def getCacheTranslateStacktrace (self, session, spring, file, address):
@@ -526,9 +529,7 @@ class Backend:
 					return (self.getCacheTranslateStacktraceCache[spring][file][address])
 		
 		id = session.query( CacheStacktrace ).filter( CacheStacktrace.spring == spring ).filter( CacheStacktrace.file == file ).filter( CacheStacktrace.address == address ).first()
-#		id = session.query( CacheStacktrace.id ).filter( CacheStacktrace.address == address ).first()
 		if id:
-#			if session.query( CacheStacktrace.id ).filter( and_ (CacheStacktrace.address == address ) ).one():
 			if not self.getCacheTranslateStacktraceCache.has_key (spring):
 				self.getCacheTranslateStacktraceCache[spring] = {}
 				if not self.getCacheTranslateStacktraceCache[spring].has_key (file):
@@ -575,23 +576,3 @@ class Backend:
 			if match.find ('.exe') != -1 or match.find ('.dll') != -1:
 				return (match)
 		return (None)
-
-
-#
-#class StacktraceTranslated(Base):
-#	__tablename__ 			= 'stacktracetranslated'
-#	id						= Column( Integer, primary_key=True )
-#	file					= Column( String(128) )
-#	line					= Column( Integer )
-#
-#
-#class CacheStacktrace(Base):
-#	__tablename__ 			= 'cachestacktrace'
-#	id						= Column( Integer, primary_key=True )
-#	spring					= Column( String(128) )
-#	file					= Column( String(128) )
-#	address					= Column( String(10) )
-#	cppfile					= Column( String(128) )
-#	cppline					= Column( Integer )
-#	lastscan				= Column( Integer )
-#	successful				= Column( Boolean, default=False )
