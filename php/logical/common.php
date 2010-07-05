@@ -54,7 +54,7 @@ function GetSettings ($ID)	{
 
 
 function GetStacktrace ($ID)	{
-	$MySQL_Result = DB_Query ("SELECT stacktrace.orderid, stacktrace.raw, stacktracedata.*, stacktracetranslated.file, stacktracetranslated.line FROM stacktrace LEFT JOIN stacktracedata ON stacktrace.stacktraceid=stacktracedata.id LEFT JOIN stacktracetranslated ON stacktrace.translatedid=stacktracetranslated.id WHERE reportid='" . mysql_escape_string ($ID) . "'");
+	$MySQL_Result = DB_Query ("SELECT stacktrace.orderid, stacktrace.raw, stacktracedata.*, stacktracetranslated.file AS cppfile, stacktracetranslated.line AS cppline FROM stacktrace LEFT JOIN stacktracedata ON stacktrace.stacktraceid=stacktracedata.id LEFT JOIN stacktracetranslated ON stacktrace.translatedid=stacktracetranslated.id WHERE reportid='" . mysql_escape_string ($ID) . "'");
 	while ($Data = mysql_fetch_assoc ($MySQL_Result))
 		$Return[$Data['orderid']] = $Data;
 	return ($Return);

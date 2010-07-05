@@ -28,8 +28,8 @@ if (is_array ($Stacktrace))	{	?>
 <TD><? echo $Row['functionname']; ?></TD>
 <TD><? echo $Row['functionat']; ?></TD>
 <TD><? echo $Row['address']; ?></TD>
-<TD><? echo $Row['file']; ?></TD>
-<TD><? echo $Row['line']; ?></TD>
+<TD><? echo $Row['cppfile']; ?></TD>
+<TD><? echo $Row['cppline']; ?></TD>
 </TR>
 <?	}	?>
 </TABLE></TD></TR>
