@@ -121,9 +121,14 @@ if ($Post['Filter'])	{
 					if ($ID || is_numeric ($ID))	{
 						if (substr ($ID, 0, 6) == "REGEX_")	{
 							if (substr ($ID, 6) || is_numeric (substr ($ID, 6)))
-								$NewWhere[$Setting][] = "CONCAT(stacktracetranslated.file, ' (', stacktracetranslated.line, ')') REGEXP '" . mysql_escape_string (substr ($ID, 6)) . "'";
 								$Join[ZydHash ("stacktrace", "Table")] = "LEFT JOIN stacktrace ON records.id=stacktrace.reportid";
-								$Join[ZydHash ("stacktracetranslated", "Table")] = "LEFT JOIN stacktracetranslated ON stacktrace." . $Setting . "id=stacktracetranslated.id";
+								if ($Setting == "translated")	{
+									$NewWhere[$Setting][] = "CONCAT(stacktracetranslated.file, ' (', stacktracetranslated.line, ')') REGEXP '" . mysql_escape_string (substr ($ID, 6)) . "'";
+									$Join[ZydHash ("stacktracetranslated", "Table")] = "LEFT JOIN stacktracetranslated ON stacktrace." . $Setting . "id=stacktracetranslated.id";
+								}	else	{
+									$NewWhere[$Setting][] = "CONCAT(stacktracedata.file, ' [', stacktracedata.address, ']') REGEXP '" . mysql_escape_string (substr ($ID, 6)) . "'";
+									$Join[ZydHash ("stacktracedata", "Table")] = "LEFT JOIN stacktracedata ON stacktrace." . $Setting . "id=stacktracedata.id";
+								}
 						}	else	{
 							$NewWhere[$Setting][] = "stacktrace." . mysql_escape_string ($Setting) . "id='" . mysql_escape_string ($ID) . "'";
 						}
@@ -160,8 +165,13 @@ foreach ($Post['Selected'] as $Selected)	{
 		$Select[ZydHash ($Selected[1], "Value")] = ZydHash ($Selected[1], "Table") . ".data AS " . ZydHash ($Selected[1], "Value");
 	}	elseif ($Selected[0] == "stacktrace")	{
 		$Join[ZydHash ("stacktrace", "Table")] = "LEFT JOIN stacktrace ON records.id=stacktrace.reportid";
-		$Join[ZydHash ("stacktracetranslated", "Table")] = "LEFT JOIN stacktracetranslated ON stacktrace." . $Setting . "id=stacktracetranslated.id";
-		$Select[ZydHash ($Selected[1], "Value")] = "CONCAT(stacktracetranslated.file, ' (', stacktracetranslated.line, ')') AS " . ZydHash ($Selected[1], "Value");
+		if ($Selected[1] == "translated")	{
+			$Join[ZydHash ("stacktracetranslated", "Table")] = "LEFT JOIN stacktracetranslated ON stacktrace." . $Selected[1] . "id=stacktracetranslated.id";
+			$Select[ZydHash ($Selected[1], "Value")] = "CONCAT(stacktracetranslated.file, ' (', stacktracetranslated.line, ')') AS " . ZydHash ($Selected[1], "Value");
+		}	else	{
+			$Join[ZydHash ("stacktracedata", "Table")] = "LEFT JOIN stacktracedata ON stacktrace." . $Selected[1] . "id=stacktracedata.id";
+			$Select[ZydHash ($Selected[1], "Value")] = "CONCAT(stacktracedata.file, ' [', stacktracedata.address, ']') AS " . ZydHash ($Selected[1], "Value");
+		}
 	}
 	$PageURL .= "&Selected[]=" . join ("@", $Selected);
 }
@@ -189,9 +199,10 @@ if (is_array ($Filter))	{
 }
 ?>
 </TR>
-<TR><TD COLSPAN="100"><INPUT TYPE="SUBMIT" VALUE="Refresh"> &nbsp; <SELECT NAME="Filter[]" ONCHANGE="document.List.submit ();"><OPTION VALUE="">==[ Add new filter ]==</OPTION><? echo FilterOptions (); ?></SELECT></TD></TR>
+<TR><TD COLSPAN="100"><SELECT NAME="Filter[]" ONCHANGE="document.List.submit ();"><OPTION VALUE="">==[ Add new filter ]==</OPTION><? echo FilterOptions (); ?></SELECT></TD></TR>
 </TABLE>
 </TD></TR>
+<TR><TD><INPUT TYPE="SUBMIT" VALUE="Refresh"></TD></TR>
 </FORM>
 </TABLE><BR>
 
@@ -251,8 +262,9 @@ function FilterOptions ($Selected = NULL)	{
 	$Options['index@contains_demo'] = "index - contains_demo";
 	$Options['indexid@first_crash_line'] = "index - first crash line";
 	$Options['indexid@first_crash_line_translated'] = "index - first crash line translated";
-//	$Options['stacktrace@stacktrace'] = "stacktrace - stacktrace";
-	$Options['stacktrace@translated'] = "stacktrace - translated (multi-row)";
+	$Options['indexid@player'] = "index - player";
+	$Options['stacktrace@stacktrace'] = "stacktrace - stacktrace (multi rows/report)";
+	$Options['stacktrace@translated'] = "stacktrace - translated (multi rows/report)";
 	$Data = GetSettingsList ();
 	foreach (array_keys ($Data) as $ID)
 		$Options["settingid@" . $ID] = "setting - " . $Data[$ID];
@@ -291,6 +303,10 @@ function Filter ($Type, $Selected)	{
 			$MySQL_Result = DB_Query ("SELECT id, file, line FROM stacktracetranslated ORDER BY file, line");
 			while ($Data = mysql_fetch_assoc ($MySQL_Result))
 				$Options[] = array ($Data['id'], $Data['file'] . " (" . $Data['line'] . ")");
+		}	elseif ($Type == "stacktrace" && $SubType == "stacktrace")	{
+			$MySQL_Result = DB_Query ("SELECT id, file, address FROM stacktracedata ORDER BY file, address");
+			while ($Data = mysql_fetch_assoc ($MySQL_Result))
+				$Options[] = array ($Data['id'], $Data['file'] . " [" . $Data['address'] . "]");
 		}
 		foreach (array_keys ($Options) as $Option)
 			$Options[$Option] = "<OPTION VALUE=\"" . $Type . "@" . $SubType . "@" . $Options[$Option][0] . "\"" . (is_numeric ($Selected[$SubType][$Options[$Option][0]]) || $Selected[$SubType][$Options[$Option][0]] ? " SELECTED" : "") . ">" . $Options[$Option][1] . "</OPTION>";
