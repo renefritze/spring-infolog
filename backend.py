@@ -2,7 +2,7 @@
 from sqlalchemy import *
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import *
-import datetime, os, re, genshi, xmlrpclib
+import datetime, os, re, genshi, xmlrpclib, time
 
 current_db_rev = 5
 Base = declarative_base()
@@ -13,6 +13,7 @@ class Crash(Base):
 	date					= Column( DateTime )
 	filename				= Column( String(255) )
 	script					= Column( Text )
+	playerid				= Column( Integer )
 	extensionsid			= Column( Integer )
 	platformid				= Column( Integer )
 	springid				= Column( Integer )
@@ -55,7 +56,7 @@ class Crash(Base):
 class RecordsData(Base):
 	__tablename__ 			= 'recordsdata'
 	id						= Column( Integer, primary_key=True )
-	field					= Column( Enum ('extensions', 'platform', 'spring', 'map', 'gamemod', 'gameid' ,'sdl_version' ,'glew_version' ,'al_vendor' ,'al_version' ,'al_renderer' ,'al_extensions' ,'alc_extensions' ,'al_device' ,'al_available_devices' ,'gl_version' ,'gl_vendor' ,'gl_renderer' ,'lobby_client_version', 'first_crash_line', 'first_crash_line_translated') )
+	field					= Column( Enum ('extensions', 'platform', 'spring', 'map', 'gamemod', 'gameid' ,'sdl_version' ,'glew_version' ,'al_vendor' ,'al_version' ,'al_renderer' ,'al_extensions' ,'alc_extensions' ,'al_device' ,'al_available_devices' ,'gl_version' ,'gl_vendor' ,'gl_renderer' ,'lobby_client_version', 'first_crash_line', 'first_crash_line_translated', 'player') )
 	data					= Column( Text )
 
 
@@ -219,6 +220,10 @@ class Backend:
 			crash.extensionsid = self.getRecordDataID (session, 'extensions', data['ext.txt'])
 		if data.has_key( 'script.txt' ):
 			crash.script = self.dbEncode (data['script.txt'])
+			for line in data['script.txt'].split ():
+				if line.find ('MyPlayerName') != -1:
+					crash.playerid = self.getRecordDataID (session, 'player', line.strip ()[13:-1])
+		
 		crash.status = None
 		
 		if data.has_key ('client.txt'):
@@ -340,13 +345,11 @@ class Backend:
 						# First line for grouping reasons... (containing \AI\Skirmish\ or spring.exe)
 						if not crash.first_crash_lineid:
 							match = self.findSpringModuleFile (line)
-#							match = self.parseInfologSub ('(\SAI\SSkirmish[^( \()]*)|(\S(spring|spring-hl|spring-mt).exe)', line, 0)
 							if (match):
 								crash.first_crash_lineid = self.getRecordDataID (session, 'first_crash_line', match + ' [' + temp['address'] + ']')
 								trans = self.getCacheTranslateStacktrace (session, crash.springversion, match, temp['address'])
 								if trans['successful']:
 									crash.first_crash_line_translatedid = self.getRecordDataID (session, 'first_crash_line_translated', trans['file'] + ' (' + str (trans['line']) + ')')
-#								crash.first_crash_line_translatedid = self.getTranslateStacktrace (session, crash.springversion, match, temp['address'])
 			
 			if (al_available_devices):
 				crash.al_available_devicesid = self.getRecordDataID (session, 'al_available_devices', "\n".join (al_available_devices))
@@ -481,12 +484,7 @@ class Backend:
 		for stacktrace in stacktracelist:
 			stacktrace.translatedid = self.getTranslateStacktrace (session, springversion, stacktrace.function, stacktrace.address)
 		return (stacktracelist)
-#class StacktraceTranslated(Base):
-#	__tablename__ 			= 'stacktracetranslated'
-#	id						= Column( Integer, primary_key=True )
-#	file					= Column( String(128) )
-#	line					= Column( Integer )
-#
+	
 	
 	def getTranslateStacktrace (self, session, springversion, function, address):
 		id = None
@@ -559,7 +557,7 @@ class Backend:
 			cachestacktrace.address = address
 			cachestacktrace.cppfile = cppfile
 			cachestacktrace.cppline = cppline
-			cachestacktrace.lastscan = 0
+			cachestacktrace.lastscan = int (time.time())
 			cachestacktrace.successful = successful
 			session.add( cachestacktrace )
 			session.commit()
