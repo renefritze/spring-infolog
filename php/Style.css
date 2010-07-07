@@ -1,10 +1,10 @@
 TABLE{padding:0px; border-collapse: collapse}
 TABLE.Box{border: 1px solid #000000;}
 
-TD{vertical-align:top;}
+TD{font-size:13px; font-family:sans-serif; vertical-align:top;}
 TD.NoPad{padding:0px;}
 
-TH{background:#CD6600; color:#FFFFFF;}
+TH{font-size:15px; font-family:sans-serif; background:#CD6600; color:#FFFFFF;}
 TH.Sub{background:#FF8C00; font-weight:normal;}
 TH.SubSub{background:#FF9C00; font-weight:normal;}
 
