@@ -166,12 +166,17 @@ foreach ($Post['Selected'] as $Selected)	{
 	}	elseif ($Selected[0] == "stacktrace")	{
 		$Join[ZydHash ("stacktrace", "Table")] = "LEFT JOIN stacktrace ON records.id=stacktrace.reportid";
 		if ($Selected[1] == "translated")	{
-			$Join[ZydHash ("stacktracetranslated", "Table")] = "LEFT JOIN stacktracetranslated ON stacktrace." . $Selected[1] . "id=stacktracetranslated.id";
-			$Select[ZydHash ($Selected[1], "Value")] = "CONCAT(stacktracetranslated.file, ' (', stacktracetranslated.line, ')') AS " . ZydHash ($Selected[1], "Value");
+			$Join[ZydHash ("stacktracetranslated", "Table")] = "LEFT JOIN stacktracetranslated ON stacktrace.translatedid=stacktracetranslated.id";
+			$Select[ZydHash ($Selected[1], "Value")] = "GROUP_CONCAT(stacktracetranslated.file, ' (', stacktracetranslated.line, ')') AS " . ZydHash ($Selected[1], "Value");
+		}	elseif ($Selected[1] == "stacktrace")	{
+			$Join[ZydHash ("stacktracedata", "Table")] = "LEFT JOIN stacktracedata ON stacktrace.stacktraceid=stacktracedata.id";
+			$Select[ZydHash ($Selected[1], "Value")] = "GROUP_CONCAT(stacktracedata.file, ' [', stacktracedata.address, ']') AS " . ZydHash ($Selected[1], "Value");
 		}	else	{
-			$Join[ZydHash ("stacktracedata", "Table")] = "LEFT JOIN stacktracedata ON stacktrace." . $Selected[1] . "id=stacktracedata.id";
-			$Select[ZydHash ($Selected[1], "Value")] = "CONCAT(stacktracedata.file, ' [', stacktracedata.address, ']') AS " . ZydHash ($Selected[1], "Value");
+			$Join[ZydHash ("stacktracetranslated", "Table")] = "LEFT JOIN stacktracetranslated ON stacktrace.translatedid=stacktracetranslated.id";
+			$Join[ZydHash ("stacktracedata", "Table")] = "LEFT JOIN stacktracedata ON stacktrace.stacktraceid=stacktracedata.id";
+			$Select[ZydHash ($Selected[1], "Value")] = "GROUP_CONCAT(stacktracedata.file, ' [', stacktracedata.address, '] ', stacktracetranslated.file, ' (', stacktracetranslated.line, ')') AS " . ZydHash ($Selected[1], "Value");
 		}
+		$SelectValue[ZydHash ($Selected[1], "Value")] = array ("REPLACE", ",", "<BR>");
 	}
 	$PageURL .= "&Selected[]=" . join ("@", $Selected);
 }
@@ -179,7 +184,7 @@ foreach ($Post['Selected'] as $Selected)	{
 //echo "\n\nSELECT records.id, date" . ($Select ? ", " . join (", ", $Select) : "") . " FROM records" . ($Join ? " " . join (" ", $Join) : NULL) . ($Where ? " WHERE (" . join (") AND (", $Where) . ")" : NULL), "\n\n\n<BR>";
 $MySQL_Result = DB_Query ("SELECT COUNT(records.id) AS Rows FROM records" . ($Join ? " " . join (" ", $Join) : NULL) . ($Where ? " WHERE (" . join (") AND (", $Where) . ")" : NULL));
 $Rows = join ("", mysql_fetch_assoc ($MySQL_Result));
-$MySQL_Result = DB_Query ("SELECT records.id, date" . ($Select ? ", " . join (", ", $Select) : "") . " FROM records" . ($Join ? " " . join (" ", $Join) : NULL) . ($Where ? " WHERE (" . join (") AND (", $Where) . ")" : NULL) . " ORDER BY records.id LIMIT " . mysql_escape_string ($Post['Limit'] ? $Post['Limit'] : 0) . ", " . $HitsPerPage);
+$MySQL_Result = DB_Query ("SELECT records.id, date" . ($Select ? ", " . join (", ", $Select) : "") . " FROM records" . ($Join ? " " . join (" ", $Join) : NULL) . ($Where ? " WHERE (" . join (") AND (", $Where) . ")" : NULL) . " GROUP BY records.id ORDER BY records.id LIMIT " . mysql_escape_string ($Post['Limit'] ? $Post['Limit'] : 0) . ", " . $HitsPerPage);
 ?>
 <TABLE WIDTH="100%">
 <FORM METHOD="POST" NAME="List">
@@ -230,7 +235,7 @@ while ($Data = mysql_fetch_assoc ($MySQL_Result))	{
 <TR>
 <TD CLASS="<? echo $CSS, abs (++$iCol[$iRow] % 2 - 1); ?>"><A HREF="?Details&ID=<? echo $Data['id']; ?>"><? echo $Data['id']; ?></A></TD>
 <TD CLASS="<? echo $CSS, abs (++$iCol[$iRow] % 2 - 1); ?>"><? echo $Data['date']; ?></TD>
-<?	if (is_array ($Select))	{	foreach (array_keys ($Select) as $Field)	{	?><TD CLASS="<? echo $CSS, abs (++$iCol[$iRow] % 2 - 1); ?>"><? echo $Data[$Field]; ?></TD><?	}	}	?></TR>
+<?	if (is_array ($Select))	{	foreach (array_keys ($Select) as $Field)	{	?><TD CLASS="<? echo $CSS, abs (++$iCol[$iRow] % 2 - 1); ?>"><? echo DisplayValue ($Data[$Field], $SelectValue[$Field]); ?></TD><?	}	}	?></TR>
 <?
 }
 ?>
@@ -263,8 +268,9 @@ function FilterOptions ($Selected = NULL)	{
 	$Options['indexid@first_crash_line'] = "index - first crash line";
 	$Options['indexid@first_crash_line_translated'] = "index - first crash line translated";
 	$Options['indexid@player'] = "index - player";
-	$Options['stacktrace@stacktrace'] = "stacktrace - stacktrace (multi rows/report)";
-	$Options['stacktrace@translated'] = "stacktrace - translated (multi rows/report)";
+	$Options['stacktrace@stacktrace'] = "stacktrace - stacktrace";
+	$Options['stacktrace@translated'] = "stacktrace - translated";
+	$Options['stacktrace@complete'] = "stacktrace - complete (no-filter)";
 	$Data = GetSettingsList ();
 	foreach (array_keys ($Data) as $ID)
 		$Options["settingid@" . $ID] = "setting - " . $Data[$ID];
@@ -313,6 +319,14 @@ function Filter ($Type, $Selected)	{
 		$Return[] = str_replace (array ("%TYPE%", "%LIST%", "%KEY%", "%REGEXVALUE%", "%FILTERID%"), array (($DisplayType ? $DisplayType : $SubType), join ("\n", $Options), $Type . "@" . $SubType . "@", $RegExValue, uniqid ()), $Template);
 	}
 	return (join ("\n\n\n", $Return));
+}
+
+
+function DisplayValue ($Value, $Setup = NULL)	{
+	if (!is_array ($Setup))
+		return ($Value);
+	if ($Setup[0] == "REPLACE")
+		return (str_replace ($Setup[1], $Setup[2], $Value));
 }
 ?>
 <SCRIPT>

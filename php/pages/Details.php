@@ -25,9 +25,9 @@ if (is_array ($Stacktrace))	{	?>
 <TR>
 <TD><? echo $Row['orderid']; ?></TD>
 <TD><? echo $Row['file']; ?></TD>
-<TD><? echo $Row['functionname']; ?></TD>
-<TD><? echo $Row['functionat']; ?></TD>
 <TD><? echo $Row['address']; ?></TD>
+<TD><? echo $Row['functionname']; ?></TD>
+<TD><? echo $Row['functionaddress']; ?></TD>
 <TD><? echo $Row['cppfile']; ?></TD>
 <TD><? echo $Row['cppline']; ?></TD>
 </TR>
