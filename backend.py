@@ -301,7 +301,7 @@ class Backend:
 					if (match):
 						crash.springid = self.getRecordDataID (session, 'spring', line)
 						crash.springversion = line
-				elif (crash.springid):
+				if (crash.springid and not crash.crashed):
 					match = re.search ('^\[[ 0-9]*\] Spring( /d*\.)*.*has crashed.$', line)
 					if (match):
 						crash.crashed = True
