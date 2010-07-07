@@ -513,8 +513,8 @@ class Backend:
 
 
 	def getCacheTranslateStacktrace (self, session, spring, file, address):
-		if not self.findSpringModuleFile (file):
-			return (None)
+#		if not self.findSpringModuleFile (file):
+#			return (None)
 		spring = self.dbEncode (spring.strip ())
 		file = self.dbEncode (self.findSpringModuleFile (file.strip ()))
 		address = self.dbEncode (address.strip ())
