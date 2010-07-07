@@ -5,8 +5,8 @@ TD{font-size:13px; font-family:sans-serif; vertical-align:top;}
 TD.NoPad{padding:0px;}
 
 TH{font-size:15px; font-family:sans-serif; background:#CD6600; color:#FFFFFF;}
-TH.Sub{background:#FF8C00; font-weight:normal;}
-TH.SubSub{background:#FF9C00; font-weight:normal;}
+TH.Sub{font-size:14px;background:#FF8C00; font-weight:normal;}
+TH.SubSub{font-size:13px;background:#FF9C00; font-weight:normal;}
 
 TD.LineM0{background:#87CEFA;}
 TD.LineM0S0{background:#87CEFA;}

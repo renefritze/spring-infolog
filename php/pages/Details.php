@@ -23,7 +23,7 @@ if (is_array ($Stacktrace))	{	?>
 <TD><? echo $Row['orderid']; ?></TD>
 <TD><? echo $Row['file']; ?> [<? echo $Row['address']; ?>]</TD>
 <TD><? echo $Row['functionname'] . ($Row['functionaddress'] ? " (" . $Row['functionaddress'] . ")" : "&nbsp;"); ?></TD>
-<TD><? echo $Row['cppfile'] . ($Row['cppline'] ? " (" . $Row['cppline'] . ")" : "&nbsp;"); ?></TD>
+<TD><A HREF="http://github.com/spring/spring/blob/<? echo ZydSpringChecksum ($Data['spring']) . "/" . $Row['cppfile']; ?>#L<? echo $Row['cppline']; ?>"><? echo $Row['cppfile'] . ($Row['cppline'] ? " (" . $Row['cppline'] . ")" : "&nbsp;"); ?></A></TD>
 </TR>
 <?	}	?>
 </TABLE></TD></TR>
@@ -31,6 +31,7 @@ if (is_array ($Stacktrace))	{	?>
 }
 ?>
 <TR><TH CLASS="Sub" COLSPAN="2">Data</TH></TR>
+<TR><TD>GitHub</TD><TD><? echo ZydSpringChecksum ($Data['spring']); ?></TD></TR>
 <?
 foreach (array ("player", "spring", "platform", "map", "gamemod", "gameid", "sdl_version", "glew_version", "al_vendor", "al_version", "al_renderer", "al_extensions", "alc_extensions", "al_device", "al_available_devices", "gl_version", "gl_vendor", "gl_renderer", "lobby_client_version", "first_crash_line") as $Field)	{	?>
 <TR><TD><? echo $Field; ?></TD><TD><? echo $Data[$Field]; ?></TD></TR>
@@ -46,3 +47,13 @@ if ($Data['extensions'])
 <?	}
 ?>
 </TABLE>
+<?
+function ZydSpringChecksum ($Spring)	{
+	if (strstr ($Spring, "{") && strstr ($Spring, "}"))
+		return (substr ($Spring, strpos ($Spring, "-g") + 2, 7));
+	$Spring = trim (str_replace ("spring", "", strtolower ($Spring)));
+	if (strstr ($Spring, " "))
+		return (substr ($Spring, 0, strpos ($Spring, " ")));
+	return ($Spring);
+}
+?>
