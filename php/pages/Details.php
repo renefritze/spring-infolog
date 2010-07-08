@@ -23,7 +23,7 @@ if (is_array ($Stacktrace))	{	?>
 <TD><? echo $Row['orderid']; ?></TD>
 <TD><? echo $Row['file']; ?> [<? echo $Row['address']; ?>]</TD>
 <TD><? echo $Row['functionname'] . ($Row['functionaddress'] ? " (" . $Row['functionaddress'] . ")" : "&nbsp;"); ?></TD>
-<TD><A HREF="http://github.com/spring/spring/blob/<? echo ZydSpringChecksum ($Data['spring']) . "/" . $Row['cppfile']; ?>#L<? echo $Row['cppline']; ?>"><? echo $Row['cppfile'] . ($Row['cppline'] ? " (" . $Row['cppline'] . ")" : "&nbsp;"); ?></A></TD>
+<TD><A HREF="http://github.com/spring/spring/blob/<? echo ZydSpringChecksum ($Data['spring']) . "/" . $Row['cppfile']; ?>#L<? echo $Row['cppline']; ?>" TARGET="_blank"><? echo $Row['cppfile'] . ($Row['cppline'] ? " (" . $Row['cppline'] . ")" : "&nbsp;"); ?></A></TD>
 </TR>
 <?	}	?>
 </TABLE></TD></TR>
@@ -49,7 +49,7 @@ if ($Data['extensions'])
 </TABLE>
 <?
 function ZydSpringChecksum ($Spring)	{
-	if (strstr ($Spring, "{") && strstr ($Spring, "}"))
+	if (strstr ($Spring, "-g"))
 		return (substr ($Spring, strpos ($Spring, "-g") + 2, 7));
 	$Spring = trim (str_replace ("spring", "", strtolower ($Spring)));
 	if (strstr ($Spring, " "))
