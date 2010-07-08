@@ -17,13 +17,12 @@ if (is_array ($Stacktrace))	{	?>
 <TH CLASS="SubSub">Function</TH>
 <TH CLASS="SubSub">File</TH>
 </TR>
-<?	foreach ($Stacktrace as $Row)	{
-		?>
+<?	foreach ($Stacktrace as $Row)	{	?>
 <TR>
 <TD><? echo $Row['orderid']; ?></TD>
 <TD><? echo $Row['file']; ?> [<? echo $Row['address']; ?>]</TD>
 <TD><? echo $Row['functionname'] . ($Row['functionaddress'] ? " (" . $Row['functionaddress'] . ")" : "&nbsp;"); ?></TD>
-<TD><A HREF="http://github.com/spring/spring/blob/<? echo ZydSpringChecksum ($Data['spring']) . "/" . $Row['cppfile']; ?>#L<? echo $Row['cppline']; ?>" TARGET="_blank"><? echo $Row['cppfile'] . ($Row['cppline'] ? " (" . $Row['cppline'] . ")" : "&nbsp;"); ?></A></TD>
+<TD><? echo DisplaySourceFile ($Row['cppfile'], $Row['cppline'], $Data['spring']); ?></A></TD>
 </TR>
 <?	}	?>
 </TABLE></TD></TR>
@@ -48,6 +47,13 @@ if ($Data['extensions'])
 ?>
 </TABLE>
 <?
+function DisplaySourceFile ($File, $Line, $Spring)	{
+	if (substr ($File, 0, 4) == "rts/")
+		return ("<A HREF=\"http://github.com/spring/spring/blob/" . ZydSpringChecksum ($Spring) . "/" . $File . "#L" . $Line . "\" TARGET=\"_blank\">" . $File . " (" . $Line . ")</A>");
+	return ($File . " (" . $Line . ")");
+}
+
+
 function ZydSpringChecksum ($Spring)	{
 	if (strstr ($Spring, "-g"))
 		return (substr ($Spring, strpos ($Spring, "-g") + 2, 7));
