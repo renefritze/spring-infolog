@@ -5,9 +5,12 @@ from backend import *
 from upload import parseZip
 import os
 db.Connect()
+
 print 'DB: Rebuild init'
-db.metadata.drop_all()
-db.metadata.create_all()
+tables = [ Crash, RecordsData, Status, Settings, SettingsData, Stacktrace, StacktraceData, StacktraceTranslated, DbConfig ]
+for table in tables:
+	table.__table__.drop()
+	table.__table__.create()
 print 'DB: Rebuild completed'
 
 print 'Upload: parseing init'
