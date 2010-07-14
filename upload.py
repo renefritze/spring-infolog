@@ -64,7 +64,7 @@ def output_post():
 		new_id = parseZip( fn )
 		base_url = config.get('site', 'baseurl' )
 		chan = config.get('tasbot', 'report_channel' )
-		tasbot.tasclient.say(chan,'new crash report uploaded: http://%s/details?id=%d'%(base_url,new_id))
+		tasbot.tasclient.say(chan,'new crash report uploaded: http://%s%d'%(config.get('site', 'detailurl' ),new_id))
 		return 'success'
 
 	except Exception, m:
