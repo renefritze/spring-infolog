@@ -57,7 +57,9 @@ def output_post():
 	try:
 		data = request.POST['file'].value
 		upload_dir = config.get('site','uploads')
-		fn = '%s/%s/%s.zip'%( os.getcwd(), upload_dir,hashlib.sha224(data).hexdigest() )
+		fn_relative = '%s/%s.zip'%( upload_dir,hashlib.sha224(data).hexdigest() )
+		fn = fn_relative 
+		#fn = '%s/%s'%( os.getcwd(), fn_relative )  
 		fd = open( fn, 'wb')
 		fd.write( data )
 		fd.close()
